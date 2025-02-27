@@ -22,7 +22,8 @@ SECURITY_ARGS = [
 ]
 
 BROWSER_ARGS=[
-	'--no-sandbox',
+    '--disable-sandbox'
+	'--enable-blink-features=IdleDetection',
 	'--disable-blink-features=AutomationControlled',
 	'--disable-infobars',
 	'--disable-background-timer-throttling',
@@ -35,4 +36,7 @@ BROWSER_ARGS=[
 	'--no-default-browser-check',
 	'--no-startup-window',
 	'--window-position=0,0',
+    '--remote-debugging-port=9222'
 ]
+
+IGNORE_DEFAULT_ARGS=['--enable-automation']

@@ -1,8 +1,5 @@
+from src.agent.web.browser.config import BrowserConfig,BROWSER_ARGS,SECURITY_ARGS,IGNORE_DEFAULT_ARGS
 from playwright.async_api import async_playwright,Browser as PlaywrightBrowser,Playwright
-from src.agent.web.browser.config import BrowserConfig,BROWSER_ARGS,SECURITY_ARGS
-from httpx import AsyncClient
-from subprocess import Popen,DEVNULL
-import asyncio
 
 class Browser:
     def __init__(self,config:BrowserConfig=None):
@@ -33,7 +30,8 @@ class Browser:
             'downloads_path':self.config.downloads_path,
             'timeout':self.config.timeout,
             'slow_mo':self.config.slow_mo,
-            'args':BROWSER_ARGS + SECURITY_ARGS
+            'args':BROWSER_ARGS + SECURITY_ARGS,
+            'ignore_default_args': IGNORE_DEFAULT_ARGS
         }
         if self.config.wss_url is not None:
             if browser=='chrome':
@@ -44,17 +42,8 @@ class Browser:
                 browser_instance=await self.playwright.chromium.connect(self.config.wss_url)
             else:
                 raise Exception('Invalid Browser Type')
-        elif self.config.user_data_dir is not None:
+        elif self.config.browser_instance_path is not None and self.config.user_data_dir is not None:
             browser_instance=None
-        elif self.config.browser_instance_path is not None:
-            #Only for chromium
-            port=9222
-            self.process=Popen([self.config.browser_instance_path,f'--remote-debugging-port={port}','--headless'],stdout=DEVNULL,stderr=DEVNULL)
-            async with AsyncClient() as client:
-                response=await client.get(f'http://localhost:{port}/json')
-                if response.status_code!=200:
-                    raise Exception('Failed to connect to the browser instance')
-            browser_instance=await self.playwright.chromium.connect_over_cdp(f'http://localhost:{port}',slow_mo=self.config.slow_mo)
         else:
             if browser=='chrome':
                 browser_instance=await self.playwright.chromium.launch(channel='chrome',**parameters)

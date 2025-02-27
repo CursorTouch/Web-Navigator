@@ -15,7 +15,10 @@ llm=ChatGemini(model='gemini-2.0-flash',api_key=google_api_key,temperature=0)
 speech_llm=AudioGroq(model='whisper-large-v3',mode='translations',api_key=groq_api_key,temperature=0)
 
 # Initialize Web Agent
-config=BrowserConfig(browser='edge',headless=False)
+user='<your username>'
+browser_instance_path='C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+user_data_dir=f"C:\\Users\\{user}\\AppData\\Local\\Google\\Chrome\\User Data"
+config=BrowserConfig(browser='chrome',browser_instance_path=browser_instance_path,user_data_dir=user_data_dir,headless=False)
 agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=False,max_iteration=15)
 
 mode=input('Enter the mode of input (text/voice): ')

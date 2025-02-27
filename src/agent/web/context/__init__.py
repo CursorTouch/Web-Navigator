@@ -1,6 +1,6 @@
 from playwright.async_api import Page,Browser as PlaywrightBrowser, Frame,ElementHandle,BrowserContext as PlaywrightBrowserContext
+from src.agent.web.browser.config import BROWSER_ARGS,SECURITY_ARGS,IGNORE_DEFAULT_ARGS
 from src.agent.web.context.views import BrowserSession,BrowserState,Tab
-from src.agent.web.browser.config import BROWSER_ARGS,SECURITY_ARGS
 from src.agent.web.context.config import ContextConfig
 from src.agent.web.dom.views import DOMElementNode
 from src.agent.web.browser import Browser
@@ -80,7 +80,7 @@ class Context:
             'user_agent':self.config.user_agent,
             'java_script_enabled':True,
             'bypass_csp':self.config.disable_security,
-            'accept_downloads':True
+            'accept_downloads':True,
         }
 
         if browser is not None:
@@ -89,11 +89,11 @@ class Context:
             parameters.update({
                 'headless':self.browser.config.headless,
                 'slow_mo':self.browser.config.slow_mo,
-                'timezone_id':'Asia/Kolkata',
-                'locale':'en-IN',
-                'user_data_dir':self.browser.config.user_data_dir,
-                'downloads_path':self.browser.config.downloads_path,
-                'args': ['--disable-blink-features=AutomationControlled','--no-infobars','--no-sandbox'],
+                'ignore_default_args': IGNORE_DEFAULT_ARGS,
+                'args': ['--disable-blink-features=AutomationControlled','--no-infobars'],
+                'user_data_dir': self.browser.config.user_data_dir,
+                'downloads_path': self.browser.config.downloads_path,
+                'executable_path': self.browser.config.browser_instance_path,
             })
             # browser is None if the user_data_dir is not None in the Browser class
             browser=self.browser.config.browser

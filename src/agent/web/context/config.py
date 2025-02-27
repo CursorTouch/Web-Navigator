@@ -7,7 +7,7 @@ class ContextConfig:
     wait_for_network_idle_page_load_time:float=1
     maximum_wait_page_load_time:float=5
     disable_security:bool=False
-    user_agent:str='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36'
+    user_agent:str="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 
 
 RELEVANT_RESOURCE_TYPES = [
