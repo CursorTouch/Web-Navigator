@@ -8,10 +8,10 @@ import os
 class BrowserConfig:
     headless:bool=False
     wss_url:str=None
-    browser_instance_path:str=None
-    downloads_path:str=Path(os.getcwd()).joinpath('./downloads').as_posix()
+    browser_instance_dir:str=None
+    downloads_dir:str=None
     browser:Literal['chrome','firefox','edge']='edge'
-    user_data_dir:str=Path(os.getcwd()).joinpath(f'./user_data/{browser}/{getuser()}').as_posix()
+    user_data_dir:str=None
     timeout:int=60*1000
     slow_mo:int=300
 
@@ -22,7 +22,7 @@ SECURITY_ARGS = [
 ]
 
 BROWSER_ARGS=[
-    '--disable-sandbox'
+    '--disable-sandbox',
 	'--enable-blink-features=IdleDetection',
 	'--disable-blink-features=AutomationControlled',
 	'--disable-infobars',

@@ -111,6 +111,7 @@ const SAFE_ATTRIBUTES = [
         }
 
         function traverseDom(currentNode) {
+            if (!currentNode) return;
             if (currentNode.nodeType !== Node.ELEMENT_NODE) return;
 
             const tagName = currentNode.tagName.toLowerCase();
@@ -123,6 +124,9 @@ const SAFE_ATTRIBUTES = [
                 // Check if the element is covered by another element
                 const isCovered = isElementCovered(currentNode);
                 if (!isCovered) {
+                    const boundingBox = currentNode.getBoundingClientRect();
+                    const xCenter = boundingBox.left + boundingBox.width / 2;
+                    const yCenter = boundingBox.top + boundingBox.height / 2;
                     interactiveElements.push({
                         tag: currentNode.tagName.toLowerCase(),
                         role: currentNode.getAttribute('role'),
@@ -130,7 +134,8 @@ const SAFE_ATTRIBUTES = [
                         attributes: Object.fromEntries(
                             Array.from(currentNode.attributes).filter(attr => SAFE_ATTRIBUTES.includes(attr.name)).map(attr => [attr.name, attr.value])
                         ),
-                        box: currentNode.getBoundingClientRect(),
+                        box: boundingBox,
+                        center: {'x': xCenter, 'y': yCenter},
                         handle: currentNode
                     });
                 }

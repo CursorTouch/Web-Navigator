@@ -5,12 +5,17 @@ class SharedBaseModel(BaseModel):
     class Config:
         extra="allow"
 
+class Clipboard(SharedBaseModel):
+    mode:Literal['copy','paste'] = Field(...,description="the mode of the clipboard",examples=['copy'])
+    text:str = Field(...,description="the text to copy to clipboard",examples=["hello world"])
+
 class Click(SharedBaseModel):
     index:int = Field(...,description="the index of the element to click",examples=[0])
 
 class Type(SharedBaseModel):
     index:int = Field(...,description="the index of the element to type",examples=[0])
     text:str = Field(...,description="the text to type",examples=["hello world"])
+    clear:Literal['True','False']=Field(description="whether to clear the text before typing",default="False",examples=['True'])
 
 class Wait(SharedBaseModel):
     time:int = Field(...,description="the time to wait for the element to be visible in seconds",examples=[1])
@@ -33,7 +38,7 @@ class Download(SharedBaseModel):
     url:str = Field(...,description="url of the file to download",examples=["https://www.example.com/file.txt","https://abc.org/pdf/54655"])
     filename:str=Field(...,description="the name of the file to download",examples=["file.txt","xy4rs.pdf"])
 
-class ExtractContent(SharedBaseModel):
+class Extract(SharedBaseModel):
     value:Literal['markdown','html','text'] = Field(description="the type of content to be like",examples=['markdown'],default='text')
 
 class Tab(SharedBaseModel):

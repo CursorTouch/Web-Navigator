@@ -1,11 +1,27 @@
-from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,ExtractContent,Tab,Upload,Menu,Form
+from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Extract,Tab,Upload,Menu,Form
 from main_content_extractor import MainContentExtractor
 from src.agent.web.context import Context
 from typing import Literal
 from src.tool import Tool
 from pathlib import Path
 from os import getcwd
+import pyperclip as pc
 import httpx
+
+@Tool('Clipboard Tool', params=Clipboard)
+async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, context: Context = None):
+    '''To copy content to clipboard and retrieve it when needed'''
+    if mode == 'copy':
+        if text:
+            pc.copy(text)  # Copy text to system clipboard
+            return f'Copied "{text}" to clipboard'
+        else:
+            raise ValueError("No text provided to copy")
+    elif mode == 'paste':
+        clipboard_content = pc.paste()  # Get text from system clipboard
+        return f'Clipboard Content: "{clipboard_content}"'
+    else:
+        raise ValueError('Invalid mode. Use "copy" or "paste".')
 
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
@@ -22,14 +38,16 @@ async def click_tool(index:int,context:Context=None):
         await handle.click()
         return f'Clicked element at index {index}'
 
-
 @Tool('Type Tool',params=Type)
-async def type_tool(index:int,text:str,context:Context=None):
+async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To fill input fields or search boxes'''
     page=await context.get_current_page()
     _,handle=await context.get_element_by_index(index)
     await page.wait_for_load_state('load')
     await handle.scroll_into_view_if_needed()
+    if clear=='True':
+        await handle.press('Control+A')
+        await handle.press('Backspace')
     await handle.type(text,delay=80)
     return f'Typed {text} in element {index}'
 
@@ -84,8 +102,7 @@ async def key_tool(keys:str,context:Context=None):
 @Tool('Download Tool',params=Download)
 async def download_tool(index:int=None,url:str=None,filename:str=None,context:Context=None):
     '''To download a file (e.g., pdf, image, video, audio) to the system'''
-    folder_path=Path(getcwd()).joinpath('./downloads')
-    folder_path.mkdir(parents=True,exist_ok=True)
+    folder_path=Path(context.browser.config.downloads_dir)
     try:
         page=await context.get_current_page()
         _,handle=await context.get_element_by_index(index)
@@ -105,8 +122,8 @@ async def download_tool(index:int=None,url:str=None,filename:str=None,context:Co
             f.write(response.content)
     return f'Downloaded {filename} from {url} and saved it to {path}'
 
-@Tool('ExtractContent Tool',params=ExtractContent)
-async def extract_content_tool(value:str,context:Context=None):
+@Tool('Extract Tool',params=Extract)
+async def extract_tool(value:str,context:Context=None):
     '''Extract the information present in a webpage such as text, images, etc'''
     page=await context.get_current_page()
     html=await page.content()

@@ -1,4 +1,4 @@
-from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,extract_content_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool
+from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,extract_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -12,13 +12,14 @@ from src.agent import BaseAgent
 from datetime import datetime
 from termcolor import colored
 from src.tool import Tool
-import nest_asyncio
+from pathlib import Path
+import platform
 import asyncio
 import json
 
 main_tools=[
-    download_tool,click_tool,goto_tool,type_tool,scroll_tool,
-    wait_tool,back_tool,key_tool,tab_tool,upload_tool
+    download_tool,click_tool,goto_tool,extract_tool,type_tool,scroll_tool,
+    wait_tool,back_tool,key_tool,tab_tool,upload_tool,menu_tool,clipboard_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -63,7 +64,6 @@ class WebAgent(BaseAgent):
         action_name=agent_data.get('Action Name')
         action_input=agent_data.get('Action Input')
         route=agent_data.get('Route')
-
         if self.verbose:
             print(colored(f'Action Name: {action_name}',color='blue',attrs=['bold']))
             print(colored(f'Action Input: {action_input}',color='blue',attrs=['bold']))
@@ -83,7 +83,7 @@ class WebAgent(BaseAgent):
         # print('Tabs',browser_state.tabs_to_string())
         # Redefining the AIMessage and adding the new observation
         action_prompt=self.action_prompt.format(thought=thought,action_name=action_name,action_input=json.dumps(action_input,indent=2),route=route)
-        observation_prompt=self.observation_prompt.format(observation=observation,current_url=browser_state.url,tabs=browser_state.tabs_to_string(),interactive_elements=browser_state.dom_state.elements_to_string())
+        observation_prompt=self.observation_prompt.format(iteration=self.iteration,max_iteration=self.max_iteration,observation=observation,current_url=browser_state.url,tabs=browser_state.tabs_to_string(),interactive_elements=browser_state.dom_state.elements_to_string())
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
         return {**state,'agent_data':agent_data,'messages':messages,'prev_observation':observation}
 
@@ -129,12 +129,19 @@ class WebAgent(BaseAgent):
         return graph.compile(debug=False)
     
     async def async_invoke(self, input: str):
+        self.iteration=0
         actions_prompt=self.registry.actions_prompt()
         current_datetime=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         system_prompt=self.system_prompt.format(**{
             'instructions':self.instructions,
             'current_datetime':current_datetime,
-            'actions_prompt':actions_prompt
+            'actions_prompt':actions_prompt,
+            'max_iteration':self.max_iteration,
+            'iteration':self.iteration,
+            'os':platform.system(),
+            'browser':self.browser.config.browser.capitalize(),
+            'home_dir':Path.home().as_posix(),
+            'downloads_dir':self.browser.config.downloads_dir
         })
         # Attach episodic memory to the system prompt 
         if self.episodic_memory and self.episodic_memory.retrieve(input):
@@ -148,7 +155,7 @@ class WebAgent(BaseAgent):
             'route':'',
             'messages':messages
         }
-        response=await self.graph.ainvoke(state)
+        response=await self.graph.ainvoke(state,config={'recursion_limit':self.max_iteration})
         await self.close()
         # Extract and store the key takeaways of the task performed by the agent
         if self.episodic_memory:
@@ -156,20 +163,11 @@ class WebAgent(BaseAgent):
         return response.get('output')
         
     def invoke(self, input: str)->str:
-        """
-        Invoke the agent to perform a task.
-        Args:
-            input (str): The input task
-        Returns:
-            str: The final answer
-        """
-        try:
-            # If there's no running event loop, use asyncio.run
-            return asyncio.run(self.async_invoke(input))
-        except RuntimeError:
-            nest_asyncio.apply()  # Allow nested event loops in notebooks
-            loop = asyncio.get_event_loop()
-            return loop.run_until_complete(self.async_invoke(input))
+        if self.verbose:
+            print(f'Entering '+colored(self.name,'black','on_white'))
+        loop=asyncio.get_event_loop()
+        output=loop.run_until_complete(self.async_invoke(input=input))
+        return output
 
     def stream(self, input:str):
         pass

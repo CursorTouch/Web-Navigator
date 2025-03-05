@@ -1,4 +1,4 @@
-from src.agent.web.dom.views import DOMElementNode, DOMState
+from src.agent.web.dom.views import DOMElementNode, DOMState, CenterCord, BoundingBox
 from playwright.async_api import ElementHandle
 from typing import TYPE_CHECKING
 import asyncio
@@ -17,7 +17,7 @@ class DOM:
         # Loading the script
         await self.context.execute_script(script)
         # Get interactive elements
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(1.0)
         nodes=await self.context.execute_script('getInteractiveElements()')
         # print(nodes)
         # Add bounding boxes to the interactive elements
@@ -41,13 +41,24 @@ class DOM:
                 index, 
                 enable_handle=True
             )
+            box:dict=node.get('box')
+            center:dict=node.get('center')
             element_handle = handle.as_element()
             element_node = DOMElementNode(
                 tag=node.get('tag'),
                 role=node.get('role'),
                 name=node.get('name'),
                 attributes=node.get('attributes'),
-                bounding_box=node.get('box')
+                center=CenterCord(**{
+                    'x':center.get('x'),
+                    'y':center.get('y')
+                }),
+                bounding_box=BoundingBox(**{
+                    'left': box.get('left'),
+                    'top': box.get('top'),
+                    'right': box.get('right'),
+                    'bottom': box.get('bottom')
+                })
             )
             return index, (element_node, element_handle)
 

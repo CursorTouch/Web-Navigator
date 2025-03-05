@@ -75,26 +75,25 @@ class Context:
         
     async def setup_context(self,browser:PlaywrightBrowser|None=None)->PlaywrightBrowserContext:
         parameters={
-            'no_viewport':True,
             'ignore_https_errors':self.config.disable_security,
             'user_agent':self.config.user_agent,
-            'java_script_enabled':True,
             'bypass_csp':self.config.disable_security,
+            'java_script_enabled':True,
             'accept_downloads':True,
+            'no_viewport':True
         }
-
         if browser is not None:
            context=await browser.new_context(**parameters)
         else:
-            parameters.update({
+            parameters=parameters|{
                 'headless':self.browser.config.headless,
                 'slow_mo':self.browser.config.slow_mo,
                 'ignore_default_args': IGNORE_DEFAULT_ARGS,
-                'args': ['--disable-blink-features=AutomationControlled','--no-infobars'],
+                # 'args': ['--disable-blink-features=AutomationControlled','--no-infobars'],
                 'user_data_dir': self.browser.config.user_data_dir,
-                'downloads_path': self.browser.config.downloads_path,
-                'executable_path': self.browser.config.browser_instance_path,
-            })
+                'downloads_path': self.browser.config.downloads_dir,
+                'executable_path': self.browser.config.browser_instance_dir,
+            }
             # browser is None if the user_data_dir is not None in the Browser class
             browser=self.browser.config.browser
             if browser=='chrome':

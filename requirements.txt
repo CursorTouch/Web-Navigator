@@ -9,3 +9,4 @@ nest_asyncio
 MainContentExtractor
 ratelimit
 pyaudio
+pyperclip

@@ -6,7 +6,6 @@ class Browser:
         self.playwright:Playwright = None
         self.config = config if config else BrowserConfig()
         self.playwright_browser:PlaywrightBrowser = None
-        self.process=None
 
     async def __aenter__(self):
         await self.init_browser()
@@ -27,7 +26,7 @@ class Browser:
     async def setup_browser(self,browser:str)->PlaywrightBrowser:
         parameters={
             'headless':self.config.headless,
-            'downloads_path':self.config.downloads_path,
+            'downloads_path':self.config.downloads_dir,
             'timeout':self.config.timeout,
             'slow_mo':self.config.slow_mo,
             'args':BROWSER_ARGS + SECURITY_ARGS,
@@ -42,7 +41,7 @@ class Browser:
                 browser_instance=await self.playwright.chromium.connect(self.config.wss_url)
             else:
                 raise Exception('Invalid Browser Type')
-        elif self.config.browser_instance_path is not None and self.config.user_data_dir is not None:
+        elif self.config.browser_instance_dir is not None and self.config.user_data_dir is not None:
             browser_instance=None
         else:
             if browser=='chrome':
@@ -61,11 +60,8 @@ class Browser:
                 await self.playwright_browser.close()
             if self.playwright:
                 await self.playwright.stop()
-            if self.process:
-                self.process.terminate()
         except Exception as e:
             print('Browser failed to close')
         finally:
             self.playwright=None
             self.playwright_browser=None
-            self.process=None
