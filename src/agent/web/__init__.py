@@ -18,8 +18,8 @@ import asyncio
 import json
 
 main_tools=[
-    download_tool,click_tool,goto_tool,extract_tool,type_tool,scroll_tool,
-    wait_tool,back_tool,key_tool,tab_tool,upload_tool,menu_tool,clipboard_tool
+    download_tool,click_tool,goto_tool,extract_tool,type_tool,menu_tool,scroll_tool,
+    wait_tool,clipboard_tool,back_tool,key_tool,tab_tool,upload_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -165,8 +165,11 @@ class WebAgent(BaseAgent):
     def invoke(self, input: str)->str:
         if self.verbose:
             print(f'Entering '+colored(self.name,'black','on_white'))
-        loop=asyncio.get_event_loop()
-        output=loop.run_until_complete(self.async_invoke(input=input))
+        try:
+            loop=asyncio.get_event_loop()
+            output=loop.run_until_complete(self.async_invoke(input=input))
+        except Exception as e:
+            output=asyncio.run(self.async_invoke(input=input))
         return output
 
     def stream(self, input:str):

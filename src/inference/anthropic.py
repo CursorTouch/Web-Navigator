@@ -83,18 +83,19 @@ class ChatAnthropic(BaseInference):
             # print(json_object)
             if json_object.get('error'):
                 raise HTTPError(json_object['error']['message'])
-            message=json_object['choices'][0]['message']
+            message = json_object['content'][0]
             usage_metadata=json_object['usage']
-            input,output,total=usage_metadata['prompt_tokens'],usage_metadata['completion_tokens'],usage_metadata['total_tokens']
+            input,output,total=usage_metadata['input_tokens'],usage_metadata['output_tokens']
+            total=input+output
             self.tokens=Token(input=input,output=output,total=total)
             if model:
-                return model.model_validate_json(message.get('content'))
+                return model.model_validate_json(message.get('text'))
             if json:
-                return AIMessage(loads(message.get('content')))
+                return AIMessage(loads(message.get('text')))
             if message.get('content'):
-                return AIMessage(message.get('content'))
+                return AIMessage(message.get('text'))
             else:
-                tool_call=message[0]
+                tool_call=message
                 return ToolMessage(id= tool_call['id'] or str(uuid4()),name=tool_call['name'],args=tool_call['input']) 
         except HTTPError as err:
             err_object=loads(err.response.text)
@@ -174,18 +175,19 @@ class ChatAnthropic(BaseInference):
                 json_object = response.json()
                 if json_object.get('error'):
                     raise HTTPError(json_object['error']['message'])
-                message = json_object['choices'][0]['message']
+                message = json_object['content'][0]
                 usage_metadata = json_object['usage']
-                input, output, total = usage_metadata['prompt_tokens'], usage_metadata['completion_tokens'], usage_metadata['total_tokens']
+                input, output= usage_metadata['input_tokens'], usage_metadata['output_tokens']
+                total=input+output
                 self.tokens = Token(input=input, output=output, total=total)
                 if model:
-                    return model.model_validate_json(message.get('content'))
+                    return model.model_validate_json(message.get('text'))
                 if json:
-                    return AIMessage(loads(message.get('content')))
+                    return AIMessage(loads(message.get('text')))
                 if message.get('content'):
-                    return AIMessage(message.get('content'))
+                    return AIMessage(message.get('text'))
                 else:
-                    tool_call = message[0]
+                    tool_call = message
                     return ToolMessage(id=tool_call['id'] or str(uuid4()), name=tool_call['name'], args=tool_call['input'])
         except HTTPError as err:
             err_object = loads(err.response.text)

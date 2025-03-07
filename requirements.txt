@@ -10,3 +10,4 @@ MainContentExtractor
 ratelimit
 pyaudio
 pyperclip
+keyboard
