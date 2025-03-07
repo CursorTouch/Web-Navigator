@@ -8,7 +8,8 @@ const INTERACTIVE_ROLES = [
     'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'grid',
     'option', 'progressbar', 'scrollbar', 'searchbox','listbox','listbox',
     'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 'a-dropdown-button', 'click',
-    'menuitemcheckbox', 'menuitemradio', 'a-button-text', 'button-text', 'button-icon', 'button-icon-only', 'button-text-icon-only', 'dropdown', 'combobox'
+    'menuitemcheckbox', 'menuitemradio', 'a-button-text', 'button-text', 'button-icon', 'button-icon-only', 
+    'button-text-icon-only', 'dropdown', 'combobox'
 ]
 
 const SAFE_ATTRIBUTES = [

@@ -39,7 +39,7 @@ class Download(SharedBaseModel):
     filename:str=Field(...,description="the name of the file to download",examples=["file.txt","xy4rs.pdf"])
 
 class Extract(SharedBaseModel):
-    value:Literal['markdown','html','text'] = Field(description="the type of content to be like",examples=['markdown'],default='text')
+    format:Literal['markdown','html','text'] = Field(description="the format of content to be like",examples=['text'],default='markdown')
 
 class Tab(SharedBaseModel):
     mode:Literal['open','close','switch'] = Field(...,description="the mode of the tab",examples=['open'])

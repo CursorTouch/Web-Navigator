@@ -123,11 +123,11 @@ async def download_tool(index:int=None,url:str=None,filename:str=None,context:Co
     return f'Downloaded {filename} from {url} and saved it to {path}'
 
 @Tool('Extract Tool',params=Extract)
-async def extract_tool(value:str,context:Context=None):
+async def extract_tool(format:Literal['markdown','html','text']='markdown',context:Context=None):
     '''Extract the information present in a webpage such as text, images, etc'''
     page=await context.get_current_page()
     html=await page.content()
-    content=MainContentExtractor.extract(html,output_format=value)
+    content=MainContentExtractor.extract(html=html,include_links=True,output_format=format)
     return f'Extracted Page Content:\n{content}'
 
 @Tool('Tab Tool',params=Tab)
