@@ -38,7 +38,11 @@ class Context:
         if browser is not None: # The case whether is no user_data provided
             page=await context.new_page()
         else: # The case where the user_data is provided
-            page=context.pages[0]
+            pages=context.pages
+            if len(pages):
+                page=pages[0]
+            else:
+                page=await context.new_page()
         state=await self.initial_state(page)
         self.session=BrowserSession(context,page,state)
         
@@ -71,6 +75,8 @@ class Context:
     
     async def get_current_page(self)->Page:
         session=await self.get_session()
+        if session.current_page is None:
+            raise ValueError("No current page found")
         return session.current_page
         
     async def setup_context(self,browser:PlaywrightBrowser|None=None)->PlaywrightBrowserContext:
@@ -89,6 +95,7 @@ class Context:
                 'headless':self.browser.config.headless,
                 'slow_mo':self.browser.config.slow_mo,
                 'ignore_default_args': IGNORE_DEFAULT_ARGS,
+                # 'args': ['--disable-blink-features=AutomationControlled','--no-infobars'],
                 'user_data_dir': self.browser.config.user_data_dir,
                 'downloads_path': self.browser.config.downloads_dir,
                 'executable_path': self.browser.config.browser_instance_dir,
@@ -151,14 +158,3 @@ class Context:
             frame_handle=parent_iframe.as_element()
             return await frame_handle.content_frame()
         return None
-    
-    
-    
-    
-
-
-
-
-    
-
-

@@ -56,11 +56,10 @@ class Browser:
     
     async def close_browser(self):
         try:
-            if not self.config.browser_keep_alive:    
-                if self.playwright_browser:
-                    await self.playwright_browser.close()
-                if self.playwright:
-                    await self.playwright.stop()
+            if self.playwright_browser:
+                await self.playwright_browser.close()
+            if self.playwright:
+                await self.playwright.stop()
         except Exception as e:
             print('Browser failed to close')
         finally:

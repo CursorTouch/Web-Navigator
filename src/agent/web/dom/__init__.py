@@ -17,13 +17,12 @@ class DOM:
         # Loading the script
         await self.context.execute_script(script)
         # Get interactive elements
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(1.5)
         nodes=await self.context.execute_script('getInteractiveElements()')
-        # print(nodes)
         # Add bounding boxes to the interactive elements
         if use_vision:
             await self.context.execute_script('nodes=>{mark_page(nodes)}',nodes)
-            screenshot=await self.context.get_screenshot(save_screenshot=True)
+            screenshot=await self.context.get_screenshot(save_screenshot=False)
             await self.context.execute_script('unmark_page()')
         else:
             screenshot=None

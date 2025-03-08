@@ -18,7 +18,7 @@ speech_llm=AudioGroq(model='whisper-large-v3',mode='translations',api_key=groq_a
 browser_instance_dir=os.environ.get('BROWSER_INSTANCE_DIR')
 user_data_dir=os.environ.get('USER_DATA_DIR')
 downloads_dir=os.environ.get('DOWNLOADS_DIR')
-config=BrowserConfig(browser='chrome',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=downloads_dir,headless=False,browser_keep_alive=True)
+config=BrowserConfig(browser='chrome',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=downloads_dir,headless=False)
 agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=False,max_iteration=50)
 
 mode=input('Enter the mode of input (text/voice): ')

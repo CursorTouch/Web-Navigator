@@ -38,6 +38,7 @@ async def click_tool(index:int,context:Context=None):
         await handle.click()
         return f'Clicked element at index {index}'
 
+
 @Tool('Type Tool',params=Type)
 async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To fill input fields or search boxes'''
@@ -81,8 +82,7 @@ async def scroll_tool(direction:str,amount:int=None,context:Context=None):
 async def goto_tool(url:str,context:Context=None):
     '''To navigate directly to a specified URL.'''
     page=await context.get_current_page()
-    await page.reload()
-    await page.goto(url,wait_until='domcontentloaded')
+    await page.goto(url=url)
     return f'Navigated to {url}'
 
 @Tool('Back Tool',params=Back)
@@ -183,7 +183,7 @@ async def upload_tool(index:int,filenames:list[str],context:Context=None):
 
 @Tool('Menu Tool',params=Menu)
 async def menu_tool(index:int,labels:list[str],context:Context=None):
-    '''To open an element having dropdown menu and select an option from it'''
+    '''To interact with an element having dropdown menu and select an option from it'''
     _,handle=await context.get_element_by_index(index)
     await handle.scroll_into_view_if_needed()
     label=labels if len(labels)>1 else labels[0]
