@@ -1,17 +1,18 @@
-const INTERACTIVE_TAGS = [
+const INTERACTIVE_TAGS =new Set([
     'a', 'button', 'details', 'embed', 'input','option','canvas',
     'menu', 'menuitem', 'object', 'select', 'textarea', 'summary'
-]
+])
 
-const INTERACTIVE_ROLES = [
+const INTERACTIVE_ROLES =new Set([
     'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
     'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'grid',
     'option', 'progressbar', 'scrollbar', 'searchbox','listbox','listbox',
     'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 'a-dropdown-button', 'click',
-    'menuitemcheckbox', 'menuitemradio', 'a-button-text', 'button-text', 'button-icon', 'button-icon-only', 'button-text-icon-only', 'dropdown', 'combobox'
-]
+    'menuitemcheckbox', 'menuitemradio', 'a-button-text', 'button-text', 'button-icon', 'button-icon-only', 
+    'button-text-icon-only', 'dropdown', 'combobox'
+])
 
-const SAFE_ATTRIBUTES = [
+const SAFE_ATTRIBUTES = new Set([
 	'name',
 	'type',
 	'value',
@@ -36,7 +37,7 @@ const SAFE_ATTRIBUTES = [
 	'target',
     'id',
     'class'
-];
+]);
 
     const labels = [];
     const selectorMap = {};
@@ -64,31 +65,66 @@ const SAFE_ATTRIBUTES = [
 
     // Extract visible interactive elements
     async function getInteractiveElements(node=document.body) {
+
         const interactiveElements = [];  
         await waitForPageToLoad()
         function isVisible(element) {
             let type = element.getAttribute('type');
             // The radio and checkbox elements are all ready invisible so we can skip them
-            if(['radio', 'checkbox'].includes(type)) return true;
+            if(new Set(['radio', 'checkbox']).has(type)) return true;
             const style = window.getComputedStyle(element);
             const hasBoundingBox = element.offsetWidth > 0 && element.offsetHeight > 0;
-            const visible =
-                style.display !== 'none' &&
-                style.visibility !== 'hidden' &&
-                style.opacity !== '0' &&
-                hasBoundingBox;
-            return visible;
+            return style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0' && 
+            !element.hasAttribute('hidden') &&
+            hasBoundingBox;
+        }
+
+        function isElementInViewport(element) {
+            if (!element || element.offsetParent === null) {
+                return false; // Hidden elements (display: none)
+            }
+        
+            const rect = element.getBoundingClientRect();
+            const style = window.getComputedStyle(element);
+            const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+            const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+        
+            // Always consider fixed elements in the viewport if they have dimensions
+            if (style.position === "fixed") {
+                return rect.width > 0 && rect.height > 0;
+            }
+        
+            // Sticky elements: Check if they are visible inside their parent
+            if (style.position === "sticky") {
+                const parent = element.offsetParent;
+                if (parent) {
+                    const parentRect = parent.getBoundingClientRect();
+                    if (rect.bottom < parentRect.top || rect.top > parentRect.bottom) {
+                        return false; // Sticky element is outside its parent's view
+                    }
+                }
+            }
+        
+            // Check if any part of the element is inside the viewport
+            return (
+                rect.bottom >= 0 &&
+                rect.right >= 0 &&
+                rect.top <= windowHeight &&
+                rect.left <= windowWidth
+            );
         }
 
         function isClickable(element) {
-            return element.hasAttribute('onclick') || element.hasAttribute('@click')||
+            return element.hasAttribute('onclick') || element.hasAttribute('v-on:click') || element.hasAttribute('@click') || element.hasAttribute("ng-click") ||
             element.getAttribute('role') === 'button' || window.getComputedStyle(element).cursor === 'pointer'
         }
 
         function isElementCovered(element) {
             let type = element.getAttribute('type');
             // The radio and checkbox elements are all ready covered so we can skip them
-            if(['radio', 'checkbox'].includes(type)) return false;
+            if(new Set(['radio', 'checkbox']).has(type)) return false;
             // Get the bounding box of the element to find its center point
             const boundingBox = element.getBoundingClientRect();
             const x = boundingBox.left + boundingBox.width / 2;
@@ -111,14 +147,17 @@ const SAFE_ATTRIBUTES = [
         function traverseDom(currentNode) {
             if (!currentNode) return;
             if (currentNode.nodeType !== Node.ELEMENT_NODE) return;
+
             const tagName = currentNode.tagName.toLowerCase();
             const role = currentNode.getAttribute('role');
-            const hasInteractiveTag = INTERACTIVE_TAGS.includes(tagName);
-            const hasInteractiveRole = role && INTERACTIVE_ROLES.includes(role);
-            if ((hasInteractiveTag || hasInteractiveRole || isClickable(currentNode)) && isVisible(currentNode)) {
+
+            const hasInteractiveTag = INTERACTIVE_TAGS.has(tagName);
+            const hasInteractiveRole = role && INTERACTIVE_ROLES.has(role);
+
+            if ((hasInteractiveTag || hasInteractiveRole || isClickable(currentNode)) && isVisible(currentNode) && isElementInViewport(currentNode)) {
                 // Check if the element is covered by another element
-                const isCovered = isElementCovered(currentNode);
-                if (!isCovered) {
+                const isCovered = !isElementCovered(currentNode);
+                if (isCovered) {
                     const boundingBox = currentNode.getBoundingClientRect();
                     const xCenter = boundingBox.left + boundingBox.width / 2;
                     const yCenter = boundingBox.top + boundingBox.height / 2;
@@ -127,7 +166,7 @@ const SAFE_ATTRIBUTES = [
                         role: currentNode.getAttribute('role'),
                         name: currentNode.getAttribute('name')||currentNode.getAttribute('aria-label')||currentNode.getAttribute('aria-labelledby')||currentNode.getAttribute('aria-describedby')||currentNode?.textContent,
                         attributes: Object.fromEntries(
-                            Array.from(currentNode.attributes).filter(attr => SAFE_ATTRIBUTES.includes(attr.name)).map(attr => [attr.name, attr.value])
+                            Array.from(currentNode.attributes).filter(attr => SAFE_ATTRIBUTES.has(attr.name)).map(attr => [attr.name, attr.value])
                         ),
                         box: boundingBox,
                         center: {'x': xCenter, 'y': yCenter},
@@ -135,11 +174,13 @@ const SAFE_ATTRIBUTES = [
                     });
                 }
             }
+            // Handle shadow DOM
             const shadowRoot=currentNode.shadowRoot
             if(shadowRoot){
-                shadowRoot.childNodes.forEach(child => traverseDom(child));
+                Array.from(shadowRoot.children).forEach(child => traverseDom(child));
             }
-            if(tagName === 'iframe') {
+            // Handle iframes
+            if(tagName.toLowerCase() === 'iframe') {
                 try{
                     const iframeDocument = currentNode.contentDocument || currentNode.contentWindow.document;
                     traverseDom(iframeDocument.body);
@@ -148,8 +189,9 @@ const SAFE_ATTRIBUTES = [
                     console.log('The iframe is not accessable');
                 }
             }
+            // Go deeper if the current node is non interactive
             if(!isClickable(currentNode)) {
-                currentNode.childNodes.forEach(child => traverseDom(child)); // Go deeper if the current node is not interactive
+                currentNode.childNodes.forEach(child => traverseDom(child));
             }
         }
 
@@ -161,11 +203,14 @@ const SAFE_ATTRIBUTES = [
     // Mark page by placing bounding boxes and labels
     function mark_page(elements) {
         let index = 0; // Start numbering from 1
+
         elements.forEach(element => {
             const { box } = element;
             if (!box) return;
+
             const { left, top, width, height } = box;
             const color = getRandomColor();
+
             // Create bounding box
             const boundingBox = document.createElement('div');
             boundingBox.style.position = 'fixed';
@@ -176,6 +221,7 @@ const SAFE_ATTRIBUTES = [
             boundingBox.style.outline = `2px dashed ${color}`;
             boundingBox.style.pointerEvents = 'none';
             boundingBox.style.zIndex = '9999';
+
             // Create a label for numbering
             const label = document.createElement('span');
             label.textContent = index;
@@ -187,6 +233,7 @@ const SAFE_ATTRIBUTES = [
             label.style.padding = '2px 4px';
             label.style.fontSize = '12px';
             label.style.borderRadius = '2px';
+
             // Append label and bounding box
             boundingBox.appendChild(label);
             labels.push(boundingBox);

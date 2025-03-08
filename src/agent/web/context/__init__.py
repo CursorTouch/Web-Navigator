@@ -89,13 +89,16 @@ class Context:
             'no_viewport':True
         }
         if browser is not None:
-           context=await browser.new_context(**parameters)
+            context=await browser.new_context(**parameters)
+            with open('./src/agent/web/context/script.js') as f:
+                script=f.read()
+            await context.add_init_script(script)
         else:
             parameters=parameters|{
                 'headless':self.browser.config.headless,
                 'slow_mo':self.browser.config.slow_mo,
                 'ignore_default_args': IGNORE_DEFAULT_ARGS,
-                # 'args': ['--disable-blink-features=AutomationControlled','--no-infobars'],
+                'args': ['--disable-blink-features=AutomationControlled','--disable-blink-features=IdleDetection','--no-infobars'],
                 'user_data_dir': self.browser.config.user_data_dir,
                 'downloads_path': self.browser.config.downloads_dir,
                 'executable_path': self.browser.config.browser_instance_dir,
@@ -110,10 +113,6 @@ class Context:
                 context=await self.browser.playwright.chromium.launch_persistent_context(channel='msedge',**parameters)
             else:
                 raise Exception('Invalid Browser Type')
-            
-        with open('./src/agent/web/context/script.js') as f:
-            script=f.read()
-        await context.add_init_script(script)
         return context
     
     async def get_selector_map(self)->dict[int,DOMElementNode]:
