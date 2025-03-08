@@ -178,8 +178,10 @@ class WebAgent(BaseAgent):
     async def close(self):
         '''Close the browser and context followed by clean up'''
         try:
-            await self.context.close_session()
-            await self.browser.close_browser()
+            if self.context is not None:
+                await self.context.close_session()
+            if self.browser is not None:
+                await self.browser.close_browser()
         except Exception as e:
             print('Failed to finish clean up')
         finally:

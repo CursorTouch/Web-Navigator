@@ -81,7 +81,8 @@ async def scroll_tool(direction:str,amount:int=None,context:Context=None):
 async def goto_tool(url:str,context:Context=None):
     '''To navigate directly to a specified URL.'''
     page=await context.get_current_page()
-    await page.goto(url)
+    await page.reload()
+    await page.goto(url,wait_until='domcontentloaded')
     return f'Navigated to {url}'
 
 @Tool('Back Tool',params=Back)

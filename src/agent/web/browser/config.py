@@ -11,6 +11,7 @@ class BrowserConfig:
     browser_instance_dir:str=None
     downloads_dir:str=None
     browser:Literal['chrome','firefox','edge']='edge'
+    browser_keep_alive:bool=False
     user_data_dir:str=None
     timeout:int=60*1000
     slow_mo:int=300
@@ -22,8 +23,7 @@ SECURITY_ARGS = [
 ]
 
 BROWSER_ARGS=[
-    '--disable-sandbox',
-	'--enable-blink-features=IdleDetection',
+    '--no-sandbox',
 	'--disable-blink-features=AutomationControlled',
 	'--disable-infobars',
 	'--disable-background-timer-throttling',
