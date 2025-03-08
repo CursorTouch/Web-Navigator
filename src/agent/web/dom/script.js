@@ -34,9 +34,7 @@ const SAFE_ATTRIBUTES = new Set([
 	'data-qa',
 	'data-cy',
 	'href',
-	'target',
-    'id',
-    'class'
+	'target'
 ]);
 
     const labels = [];
@@ -163,13 +161,19 @@ const SAFE_ATTRIBUTES = new Set([
                     const yCenter = boundingBox.top + boundingBox.height / 2;
                     interactiveElements.push({
                         tag: currentNode.tagName.toLowerCase(),
-                        role: currentNode.getAttribute('role'),
-                        name: currentNode.getAttribute('name')||currentNode.getAttribute('aria-label')||currentNode.getAttribute('aria-labelledby')||currentNode.getAttribute('aria-describedby')||currentNode?.textContent,
+                        role: currentNode.getAttribute('role') || 'none',  // Default to 'none' if no role is found
+                        name: currentNode.getAttribute('aria-label') ||
+                              currentNode.getAttribute('name') ||
+                              currentNode.getAttribute('aria-labelledby') ||
+                              currentNode.getAttribute('aria-describedby') ||
+                              currentNode.textContent?.replace(/\s+/g, ' ').trim().split('.')[0] || null, // Trim textContent if it exists
                         attributes: Object.fromEntries(
-                            Array.from(currentNode.attributes).filter(attr => SAFE_ATTRIBUTES.has(attr.name)).map(attr => [attr.name, attr.value])
+                            Array.from(currentNode.attributes)
+                                .filter(attr => SAFE_ATTRIBUTES.has(attr.name))
+                                .map(attr => [attr.name, attr.value])
                         ),
-                        box: boundingBox,
-                        center: {'x': xCenter, 'y': yCenter},
+                        box: boundingBox || null,  // Avoid undefined errors
+                        center: { x: xCenter, y: yCenter },
                         handle: currentNode
                     });
                 }

@@ -81,6 +81,7 @@ class WebAgent(BaseAgent):
         browser_state=await self.context.get_state(use_vision=self.use_vision)
         image_obj=browser_state.screenshot
         # print('Tabs',browser_state.tabs_to_string())
+        # print(browser_state.dom_state.elements_to_string())
         # Redefining the AIMessage and adding the new observation
         action_prompt=self.action_prompt.format(thought=thought,action_name=action_name,action_input=json.dumps(action_input,indent=2),route=route)
         observation_prompt=self.observation_prompt.format(iteration=self.iteration,max_iteration=self.max_iteration,observation=observation,current_url=browser_state.url,tabs=browser_state.tabs_to_string(),interactive_elements=browser_state.dom_state.elements_to_string())
