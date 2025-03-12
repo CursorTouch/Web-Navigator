@@ -1,0 +1,5 @@
+GROQ_API_KEY=''
+GOOGLE_API_KEY=''
+USER_DATA_DIR="C:\\Users\\<YOUR NAME>\\AppData\\Local\\Google\\Chrome\\User Data"
+BROWSER_INSTANCE_DIR='C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+DOWNLOADS_DIR='C:\\Users\\<YOUR NAME>\\Downloads'

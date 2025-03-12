@@ -11,3 +11,4 @@ ratelimit
 pyaudio
 pyperclip
 keyboard
+pydantic
