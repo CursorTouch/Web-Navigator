@@ -34,7 +34,8 @@ const SAFE_ATTRIBUTES = new Set([
 	'data-qa',
 	'data-cy',
 	'href',
-	'target'
+	'target',
+    'tabindex'
 ]);
 
     const labels = [];

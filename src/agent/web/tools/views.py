@@ -25,7 +25,7 @@ class Scroll(SharedBaseModel):
     amount:int = Field(description="the amount to scroll, if None then page up or down",examples=[100],default=None)
 
 class GoTo(SharedBaseModel):
-    url:str = Field(...,description="the url to navigate to",examples=["https://www.example.com"])
+    url:str = Field(...,description="the url to navigate to",examples=["https://www.example.com","https://abc.org/pdf/54655"])
 
 class Back(SharedBaseModel):
     pass

@@ -100,6 +100,18 @@ Label: <element_index> - Tag: <element_tag> Role: <element_role> Name: <element_
 - Start with the default single tab when launching the browser and manage tabs efficiently.
 - Reuse existing unused tabs before opening new ones to optimize organization and reduce clutter.
 
+### DEEP RESEARCH CAPABILITY:
+- Use this capability based on the user’s request.
+- Identify the key aspects and subtopics that need to be investigated.
+- Outline a high-level overview of the research direction.
+- Based on the research plan, create specific search queries.
+- Optimize queries for relevance and efficiency.
+- Use multiple sources to verify accuracy.
+- Gather information (by scraping/extracting) while following execution step constraints.
+- Ensure to achieve the goal within {max_iteration} steps.
+- Ensure findings are comprehensive and relevant to the user’s request.
+- Present the research results clearly and concisely.
+
 ### EPISODIC MEMORY:
 - Retains past experiences related to similar tasks, allowing for learning and adaptation.
 - Acts as a guide to enhance performance, improve efficiency, and refine decision-making.
@@ -126,8 +138,6 @@ Your response should follow this strict format:
   <Action-Input>{{'param1':'value1','param2':'value2'...}}</Action-Input>
   <Route>Action</Route>
 </Option>
-
-NOTE: `Action-Input` should be in a valid json format.
 
 ---
 

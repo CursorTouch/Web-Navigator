@@ -125,7 +125,7 @@ async def download_tool(index:int=None,url:str=None,filename:str=None,context:Co
 
 @Tool('Extract Tool',params=Extract)
 async def extract_tool(format:Literal['markdown','html','text']='markdown',context:Context=None):
-    '''Extract the information present in a webpage such as text, images, etc'''
+    '''Scrapes the content of the current page'''
     page=await context.get_current_page()
     html=await page.content()
     content=MainContentExtractor.extract(html=html,include_links=True,output_format=format)
@@ -183,7 +183,7 @@ async def upload_tool(index:int,filenames:list[str],context:Context=None):
 
 @Tool('Menu Tool',params=Menu)
 async def menu_tool(index:int,labels:list[str],context:Context=None):
-    '''To interact with an element having dropdown menu and select an option from it'''
+    '''To select an option from the dropdown menu of an element'''
     _,handle=await context.get_element_by_index(index)
     await handle.scroll_into_view_if_needed()
     label=labels if len(labels)>1 else labels[0]
