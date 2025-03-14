@@ -12,6 +12,9 @@ class Clipboard(SharedBaseModel):
 class Click(SharedBaseModel):
     index:int = Field(...,description="the index of the element to click",examples=[0])
 
+class Screenshot(SharedBaseModel):
+    pass
+
 class Type(SharedBaseModel):
     index:int = Field(...,description="the index of the element to type",examples=[0])
     text:str = Field(...,description="the text to type",examples=["hello world"])

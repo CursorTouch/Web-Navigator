@@ -1,4 +1,4 @@
-from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Extract,Tab,Upload,Menu,Form
+from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Extract,Tab,Upload,Menu,Form,Screenshot
 from main_content_extractor import MainContentExtractor
 from src.agent.web.context import Context
 from typing import Literal
@@ -22,6 +22,11 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         return f'Clipboard Content: "{clipboard_content}"'
     else:
         raise ValueError('Invalid mode. Use "copy" or "paste".')
+    
+@Tool('Screenshot Tool',params=Screenshot)
+async def screenshot_tool(context:Context=None):
+    '''To take a screenshot of the current page, so that to understand the page better'''
+    return "Screenshot taken"
 
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
