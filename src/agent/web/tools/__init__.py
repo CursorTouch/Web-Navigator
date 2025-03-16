@@ -1,7 +1,7 @@
-from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Extract,Tab,Upload,Menu,Form,Screenshot
+from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Extract,Tab,Upload,Menu,Form
 from main_content_extractor import MainContentExtractor
 from src.agent.web.context import Context
-from typing import Literal
+from typing import Literal,Optional
 from src.tool import Tool
 from pathlib import Path
 from os import getcwd
@@ -22,11 +22,6 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         return f'Clipboard Content: "{clipboard_content}"'
     else:
         raise ValueError('Invalid mode. Use "copy" or "paste".')
-    
-@Tool('Screenshot Tool',params=Screenshot)
-async def screenshot_tool(context:Context=None):
-    '''To take a screenshot of the current page, so that to understand the page better'''
-    return "Screenshot taken"
 
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
@@ -137,7 +132,7 @@ async def extract_tool(format:Literal['markdown','html','text']='markdown',conte
     return f'Extracted Page Content:\n{content}'
 
 @Tool('Tab Tool',params=Tab)
-async def tab_tool(mode:Literal['open','close','switch'],tab_index:int=None,context:Context=None):
+async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]=None,context:Context=None):
     '''To open a new tab, close the current tab and switch from current tab to the specified tab'''
     session=await context.get_session()
     if mode=='open':
@@ -151,14 +146,14 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:int=None,cont
         pages=session.context.pages
         if tab_index is not None and tab_index>len(pages):
             raise IndexError('Index out of range')
-        page=pages[0]
+        page=pages[-1]
         session.current_page=page
         await page.bring_to_front()
         await page.wait_for_load_state('load')
-        return f'Closed current tab and switched to tab 0'
+        return f'Closed current tab and switched to previous tab'
     elif mode=='switch':
         pages=session.context.pages
-        if tab_index>len(pages):
+        if tab_index is not None and tab_index>len(pages):
             raise IndexError('Index out of range')
         page=pages[tab_index]
         session.current_page=page
@@ -188,7 +183,7 @@ async def upload_tool(index:int,filenames:list[str],context:Context=None):
 
 @Tool('Menu Tool',params=Menu)
 async def menu_tool(index:int,labels:list[str],context:Context=None):
-    '''To select an option from the dropdown menu of an element'''
+    '''To interact with an element having dropdown menu and select an option from it'''
     _,handle=await context.get_element_by_index(index)
     await handle.scroll_into_view_if_needed()
     label=labels if len(labels)>1 else labels[0]

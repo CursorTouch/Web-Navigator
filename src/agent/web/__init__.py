@@ -1,4 +1,4 @@
-from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,extract_tool,download_tool,tab_tool,upload_tool,menu_tool,screenshot_tool,form_tool
+from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,extract_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -18,10 +18,8 @@ import asyncio
 import json
 
 main_tools=[
-    download_tool,goto_tool,menu_tool,extract_tool,
-    type_tool,scroll_tool,wait_tool,clipboard_tool,
-    back_tool,key_tool,tab_tool,upload_tool,click_tool,
-    screenshot_tool
+    download_tool,click_tool,goto_tool,extract_tool,type_tool,menu_tool,scroll_tool,
+    wait_tool,clipboard_tool,back_tool,key_tool,tab_tool,upload_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -62,10 +60,10 @@ class WebAgent(BaseAgent):
     async def action(self,state:AgentState):
         "Execute the provided action"
         agent_data=state.get('agent_data')
-        thought:str=agent_data.get('Thought')
-        action_name:str=agent_data.get('Action Name')
-        action_input:dict=agent_data.get('Action Input')
-        route:str=agent_data.get('Route')
+        thought=agent_data.get('Thought')
+        action_name=agent_data.get('Action Name')
+        action_input=agent_data.get('Action Input')
+        route=agent_data.get('Route')
         if self.verbose:
             print(colored(f'Action Name: {action_name}',color='blue',attrs=['bold']))
             print(colored(f'Action Input: {action_input}',color='blue',attrs=['bold']))
@@ -80,13 +78,14 @@ class WebAgent(BaseAgent):
         if self.verbose and self.token_usage:
             print(f'Input Tokens: {self.llm.tokens.input} Output Tokens: {self.llm.tokens.output} Total Tokens: {self.llm.tokens.total}')
         # Get the current browser state
-        use_vision=self.use_vision or action_name.startswith('Screenshot')
-        browser_state=await self.context.get_state(use_vision=use_vision)
+        browser_state=await self.context.get_state(use_vision=self.use_vision)
         image_obj=browser_state.screenshot
+        # print('Tabs',browser_state.tabs_to_string())
+        # print(browser_state.dom_state.elements_to_string())
         # Redefining the AIMessage and adding the new observation
         action_prompt=self.action_prompt.format(thought=thought,action_name=action_name,action_input=json.dumps(action_input,indent=2),route=route)
         observation_prompt=self.observation_prompt.format(iteration=self.iteration,max_iteration=self.max_iteration,observation=observation,current_url=browser_state.url,tabs=browser_state.tabs_to_string(),interactive_elements=browser_state.dom_state.elements_to_string())
-        messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if use_vision else HumanMessage(observation_prompt)]
+        messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
         return {**state,'agent_data':agent_data,'messages':messages,'prev_observation':observation}
 
     def final(self,state:AgentState):

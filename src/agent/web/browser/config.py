@@ -22,8 +22,8 @@ SECURITY_ARGS = [
 ]
 
 BROWSER_ARGS=[
-    '--no-sandbox',
-	'--disable-blink-features=IdleDetection',
+    '--disable-sandbox',
+	'--enable-blink-features=IdleDetection',
 	'--disable-blink-features=AutomationControlled',
 	'--disable-infobars',
 	'--disable-background-timer-throttling',

@@ -12,9 +12,6 @@ class Clipboard(SharedBaseModel):
 class Click(SharedBaseModel):
     index:int = Field(...,description="the index of the element to click",examples=[0])
 
-class Screenshot(SharedBaseModel):
-    pass
-
 class Type(SharedBaseModel):
     index:int = Field(...,description="the index of the element to type",examples=[0])
     text:str = Field(...,description="the text to type",examples=["hello world"])
@@ -28,7 +25,7 @@ class Scroll(SharedBaseModel):
     amount:int = Field(description="the amount to scroll, if None then page up or down",examples=[100],default=None)
 
 class GoTo(SharedBaseModel):
-    url:str = Field(...,description="the url to navigate to",examples=["https://www.example.com","https://abc.org/pdf/54655"])
+    url:str = Field(...,description="the url to navigate to",examples=["https://www.example.com"])
 
 class Back(SharedBaseModel):
     pass
