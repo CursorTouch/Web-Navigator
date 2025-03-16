@@ -215,7 +215,6 @@ const SAFE_ATTRIBUTES = new Set([
 
             const { left, top, width, height } = box;
             const color = getRandomColor();
-
             // Create bounding box
             const boundingBox = document.createElement('div');
             boundingBox.style.position = 'fixed';
