@@ -1,8 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Literal
-from getpass import getuser
-from pathlib import Path
-import os
+from typing import Literal
 
 @dataclass
 class BrowserConfig:

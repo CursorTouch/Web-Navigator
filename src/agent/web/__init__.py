@@ -33,7 +33,7 @@ class WebAgent(BaseAgent):
         self.instructions=self.format_instructions(instructions)
         self.registry=Registry(main_tools+additional_tools)
         self.browser=Browser(config=config)
-        self.context=Context(self.browser,ContextConfig())
+        self.context=Context(self.browser)
         self.episodic_memory=episodic_memory
         self.max_iteration=max_iteration
         self.token_usage=token_usage
@@ -49,17 +49,20 @@ class WebAgent(BaseAgent):
     async def reason(self,state:AgentState):
         "Call LLM to make decision"
         ai_message=await self.llm.async_invoke(state.get('messages'))
-        # print(ai_message.content)
+        print(ai_message.content)
         agent_data=extract_agent_data(ai_message.content)
+        evaluate=agent_data.get("Evaluate")
         thought=agent_data.get('Thought')
         route=agent_data.get('Route')
         if self.verbose:
+            print(colored(f'Evaluate: {evaluate}',color='light_yellow',attrs=['bold']))
             print(colored(f'Thought: {thought}',color='light_magenta',attrs=['bold']))
         return {**state,'agent_data': agent_data,'messages':[ai_message],'route':route}
 
     async def action(self,state:AgentState):
         "Execute the provided action"
         agent_data=state.get('agent_data')
+        evaluate=agent_data.get("Evaluate")
         thought=agent_data.get('Thought')
         action_name=agent_data.get('Action Name')
         action_input=agent_data.get('Action Input')
@@ -83,7 +86,7 @@ class WebAgent(BaseAgent):
         # print('Tabs',browser_state.tabs_to_string())
         # print(browser_state.dom_state.elements_to_string())
         # Redefining the AIMessage and adding the new observation
-        action_prompt=self.action_prompt.format(thought=thought,action_name=action_name,action_input=json.dumps(action_input,indent=2),route=route)
+        action_prompt=self.action_prompt.format(evaluate=evaluate,thought=thought,action_name=action_name,action_input=json.dumps(action_input,indent=2),route=route)
         observation_prompt=self.observation_prompt.format(iteration=self.iteration,max_iteration=self.max_iteration,observation=observation,current_url=browser_state.url,tabs=browser_state.tabs_to_string(),interactive_elements=browser_state.dom_state.elements_to_string())
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
         return {**state,'agent_data':agent_data,'messages':messages,'prev_observation':observation}
@@ -96,12 +99,13 @@ class WebAgent(BaseAgent):
             state['messages'][-1]=HumanMessage(f'<Observation>{state.get('prev_observation')}</Observation>')
         if self.iteration<self.max_iteration:
             agent_data=state.get('agent_data')
+            evaluate=agent_data.get("Evaluate")
             thought=agent_data.get('Thought')
             final_answer=agent_data.get('Final Answer')
         else:
             thought='Looks like I have reached the maximum iteration limit reached.',
             final_answer='Maximum Iteration reached.'
-        answer_prompt=self.answer_prompt.format(thought=thought,final_answer=final_answer)
+        answer_prompt=self.answer_prompt.format(evaluate=evaluate,thought=thought,final_answer=final_answer)
         messages=[AIMessage(answer_prompt)]
         if self.verbose:
             print(colored(f'Final Answer: {final_answer}',color='cyan',attrs=['bold']))
@@ -147,6 +151,7 @@ class WebAgent(BaseAgent):
         if self.episodic_memory and self.episodic_memory.retrieve(input):
             system_prompt=self.episodic_memory.attach_memory(system_prompt)
         human_prompt=f'Task: {input}'
+        print(human_prompt)
         messages=[SystemMessage(system_prompt),HumanMessage(human_prompt)]
         state={
             'input':input,
@@ -165,11 +170,7 @@ class WebAgent(BaseAgent):
     def invoke(self, input: str)->str:
         if self.verbose:
             print(f'Entering '+colored(self.name,'black','on_white'))
-        try:
-            loop=asyncio.get_event_loop()
-            output=loop.run_until_complete(self.async_invoke(input=input))
-        except Exception as e:
-            output=asyncio.run(self.async_invoke(input=input))
+        output=asyncio.run(self.async_invoke(input=input))       
         return output
 
     def stream(self, input:str):

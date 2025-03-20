@@ -1,8 +1,9 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass,field
+from typing import Optional,Any
 
 @dataclass
 class ContextConfig:
+    credentials:dict[str,Any]=field(default_factory=dict)
     minimum_wait_page_load_time:float=0.5
     wait_for_network_idle_page_load_time:float=1
     maximum_wait_page_load_time:float=5

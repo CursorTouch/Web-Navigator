@@ -123,7 +123,8 @@ Label: <element_index> - Tag: <element_tag> Role: <element_role> Name: <element_
 
 ### Modes of Operation:
 
-You will operate in one of three modes, **Option 1** or **Option 2**, depending on the stage of solving the user's task.
+You will operate in one of the two modes, **Option 1** or **Option 2**, depending on the stage of solving the user's task.
+But note that you can only pick one option in an iteration.
 
 ---
 
@@ -134,6 +135,7 @@ In this mode, you will use the correct tool to interact with the webpage based o
 Your response should follow this strict format:
 
 <Option>
+  <Evaluate>Evaluate your previous thought, action and observation against the current list of interactive elements (current state of the page). Now based on this check whether you made mistakes in making the correct action when comparing with the current state of page.</Evaluate>
   <Thought>Think step by step. Solve the task by utilitizing the knowledge gained from the list of Interactive Elements and the screenshot of the webpage, utilize the revelant memories if available, also understand the tabs that are already open, finally find what are missing contents. Based on all of these make decision.</Thought>
   <Action-Name>Pick the right tool (example: ABC Tool, XYZ Tool)</Action-Name>
   <Action-Input>{{'param1':'value1','param2':'value2'...}}</Action-Input>
@@ -149,6 +151,7 @@ If you have gathered enough information and can confidently tell the user about 
 Your response should follow this strict format:
 
 <Option>
+  <Evaluate>Evaluate your previous thought, action and observation against the current list of interactive elements (current state of the page). Now based on this check whether you made mistakes in making the correct action when comparing with the current state of page.</Evaluate>
   <Thought>Explanation of why you are confident that the final answer is ready to be presented after utilitizing the Interactive Elements, tools and screenshot of the webpage</Thought>
   <Final-Answer>Provide the final answer to the user in markdown format.</Final-Answer>
   <Route>Final</Route>
@@ -156,4 +159,4 @@ Your response should follow this strict format:
 
 ---
 
-Stick strictly to the formats for **Option 1** or **Option 2**. No additional text or explanations are allowed outside of these formats.
+Stick strictly to the formats of **Option 1** or **Option 2**. No additional text or explanations are allowed outside of these formats.
