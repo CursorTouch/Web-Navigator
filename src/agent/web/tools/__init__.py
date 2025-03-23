@@ -28,14 +28,14 @@ async def click_tool(index:int,context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
     element,handle=await context.get_element_by_index(index)
+    # await handle.scroll_into_view_if_needed()
     if element.attributes.get('type','') in ['checkbox','radio']:
-        await page.wait_for_load_state('load')
+        await page.wait_for_load_state('domcontentloaded')
         await handle.check(force=True)
         return f'Checked element at index {index}'
     else:
-        await page.wait_for_load_state('load')
-        await handle.scroll_into_view_if_needed()
         await handle.click()
+        await page.wait_for_load_state('domcontentloaded')
         return f'Clicked element at index {index}'
 
 
@@ -125,8 +125,9 @@ async def download_tool(index:int=None,url:str=None,filename:str=None,context:Co
 
 @Tool('Extract Tool',params=Extract)
 async def extract_tool(format:Literal['markdown','html','text']='markdown',context:Context=None):
-    '''Scrapes the content of the current page'''
+    '''Scrapes the content of the current webpage'''
     page=await context.get_current_page()
+    await page.wait_for_load_state('domcontentloaded')
     html=await page.content()
     content=MainContentExtractor.extract(html=html,include_links=True,output_format=format)
     return f'Extracted Page Content:\n{content}'

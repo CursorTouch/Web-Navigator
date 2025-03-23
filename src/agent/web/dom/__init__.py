@@ -16,19 +16,25 @@ class DOM:
                 script=f.read()
         # Loading the script
         await self.context.execute_script(script)
-        # Get interactive elements
-        await asyncio.sleep(1.5)
-        nodes=await self.context.execute_script('getInteractiveElements()')
-        # Add bounding boxes to the interactive elements
-        if use_vision:
-            await self.context.execute_script('nodes=>{mark_page(nodes)}',nodes)
-            screenshot=await self.context.get_screenshot(save_screenshot=False)
-            await self.context.execute_script('unmark_page()')
-        else:
+        # Wait for the page to load
+        page=await self.context.get_current_page()
+        await page.wait_for_load_state('domcontentloaded')
+        try:
+            # Get interactive elements
+            nodes=await self.context.execute_script('getInteractiveElements()')
+            # Add bounding boxes to the interactive elements
+            if use_vision:
+                await self.context.execute_script('nodes=>{mark_page(nodes)}',nodes)
+                screenshot=await self.context.get_screenshot(save_screenshot=False)
+                await self.context.execute_script('unmark_page()')
+            else:
+                screenshot=None
+            selector_map=await self.build_selector_map(nodes)
+        except Exception as e:
+            print(e)
+            nodes=[]
             screenshot=None
-        # Remove bounding boxes
-        selector_map=await self.build_selector_map(nodes)
-        # print(selector_map)
+            selector_map={}
         return (screenshot,DOMState(nodes=list(selector_map.values()),selector_map=selector_map))
 
 

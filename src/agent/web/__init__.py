@@ -18,8 +18,10 @@ import asyncio
 import json
 
 main_tools=[
-    download_tool,click_tool,goto_tool,extract_tool,type_tool,menu_tool,scroll_tool,
-    wait_tool,clipboard_tool,back_tool,key_tool,tab_tool,upload_tool
+    download_tool,click_tool,goto_tool,extract_tool,
+    type_tool,menu_tool,scroll_tool,wait_tool,
+    clipboard_tool,back_tool,key_tool,tab_tool,
+    upload_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -33,7 +35,7 @@ class WebAgent(BaseAgent):
         self.instructions=self.format_instructions(instructions)
         self.registry=Registry(main_tools+additional_tools)
         self.browser=Browser(config=config)
-        self.context=Context(self.browser)
+        self.context=Context(browser=self.browser)
         self.episodic_memory=episodic_memory
         self.max_iteration=max_iteration
         self.token_usage=token_usage
@@ -49,7 +51,7 @@ class WebAgent(BaseAgent):
     async def reason(self,state:AgentState):
         "Call LLM to make decision"
         ai_message=await self.llm.async_invoke(state.get('messages'))
-        print(ai_message.content)
+        # print(ai_message.content)
         agent_data=extract_agent_data(ai_message.content)
         evaluate=agent_data.get("Evaluate")
         thought=agent_data.get('Thought')
@@ -103,6 +105,7 @@ class WebAgent(BaseAgent):
             thought=agent_data.get('Thought')
             final_answer=agent_data.get('Final Answer')
         else:
+            evaluate='I have reached the maximum iteration limit.'
             thought='Looks like I have reached the maximum iteration limit reached.',
             final_answer='Maximum Iteration reached.'
         answer_prompt=self.answer_prompt.format(evaluate=evaluate,thought=thought,final_answer=final_answer)
