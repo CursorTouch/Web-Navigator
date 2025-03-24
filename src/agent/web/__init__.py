@@ -9,6 +9,7 @@ from src.agent.web.registry import Registry
 from src.agent.web.state import AgentState
 from src.inference import BaseInference
 from src.agent import BaseAgent
+from pydantic import BaseModel
 from datetime import datetime
 from termcolor import colored
 from src.tool import Tool
@@ -39,6 +40,7 @@ class WebAgent(BaseAgent):
         self.episodic_memory=episodic_memory
         self.max_iteration=max_iteration
         self.token_usage=token_usage
+        self.structured_output=None
         self.use_vision=use_vision
         self.verbose=verbose
         self.iteration=0
@@ -114,13 +116,25 @@ class WebAgent(BaseAgent):
             print(colored(f'Final Answer: {final_answer}',color='cyan',attrs=['bold']))
         return {**state,'output':final_answer,'messages':messages}
     
-    def controller(self,state:AgentState):
+    def structured(self,state:AgentState):
+        "Give the structured output"
+        messages=[SystemMessage('## Structured Output'),HumanMessage(state.get('output'))]
+        structured_output=self.llm.invoke(messages=messages,model=self.structured_output)
+        return {**state,'output':structured_output}
+
+    def main_controller(self,state:AgentState):
         "Route to the next node"
         if self.iteration<self.max_iteration:
             self.iteration+=1
             return state.get('route').lower()
         else:
             return 'final'
+        
+    def output_controller(self,state:AgentState):
+        if self.structured_output:
+            return 'structured'
+        else:
+            return END
 
     def create_graph(self):
         "Create the graph"
@@ -128,16 +142,19 @@ class WebAgent(BaseAgent):
         graph.add_node('reason',self.reason)
         graph.add_node('action',self.action)
         graph.add_node('final',self.final)
+        graph.add_node('structured',self.structured)
 
         graph.add_edge(START,'reason')
-        graph.add_conditional_edges('reason',self.controller)
+        graph.add_conditional_edges('reason',self.main_controller)
         graph.add_edge('action','reason')
-        graph.add_edge('final',END)
+        graph.add_conditional_edges('final',self.output_controller)
+        graph.add_edge('structured',END)
 
         return graph.compile(debug=False)
     
-    async def async_invoke(self, input: str):
+    async def async_invoke(self, input: str, structured_output:BaseModel=None)->str|BaseModel:
         self.iteration=0
+        self.structured_output=structured_output
         actions_prompt=self.registry.actions_prompt()
         current_datetime=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         system_prompt=self.system_prompt.format(**{
@@ -154,7 +171,6 @@ class WebAgent(BaseAgent):
         if self.episodic_memory and self.episodic_memory.retrieve(input):
             system_prompt=self.episodic_memory.attach_memory(system_prompt)
         human_prompt=f'Task: {input}'
-        print(human_prompt)
         messages=[SystemMessage(system_prompt),HumanMessage(human_prompt)]
         state={
             'input':input,
@@ -170,10 +186,10 @@ class WebAgent(BaseAgent):
             self.episodic_memory.store(response.get('messages'))
         return response.get('output')
         
-    def invoke(self, input: str)->str:
+    def invoke(self, input: str,structured_output:BaseModel=None)->str|BaseModel:
         if self.verbose:
             print(f'Entering '+colored(self.name,'black','on_white'))
-        output=asyncio.run(self.async_invoke(input=input))       
+        output=asyncio.run(self.async_invoke(input=input,structured_output=structured_output))       
         return output
 
     def stream(self, input:str):

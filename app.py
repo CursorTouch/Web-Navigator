@@ -1,6 +1,7 @@
 from src.agent.web.browser.config import BrowserConfig
 from src.inference.groq import AudioGroq,ChatGroq
 from src.inference.gemini import ChatGemini
+from pydantic import BaseModel,Field
 from src.agent.web import WebAgent
 from dotenv import load_dotenv
 from src.speech import Speech
