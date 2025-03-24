@@ -32,6 +32,7 @@ class Back(SharedBaseModel):
 
 class Key(SharedBaseModel):
     keys:str = Field(...,description="the key or combination of keys to press",examples=["Enter","Control+A","Backspace"])
+    times:int = Field(description="the number of times to press the key or combination of keys",examples=[2],default=1)
 
 class Download(SharedBaseModel):
     index:int = Field(...,description="the index of the element to download file",examples=[0])

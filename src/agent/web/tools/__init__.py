@@ -94,10 +94,11 @@ async def back_tool(context:Context=None):
     return 'Navigated to previous page'
 
 @Tool('Key Tool',params=Key)
-async def key_tool(keys:str,context:Context=None):
+async def key_tool(keys:str,times:int=1,context:Context=None):
     '''To perform keyboard shorcuts'''
     page=await context.get_current_page()
-    await page.keyboard.press(keys)
+    for _ in range(times):
+        await page.keyboard.press(keys)
     return f'Pressed {keys}'
 
 @Tool('Download Tool',params=Download)

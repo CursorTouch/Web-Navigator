@@ -13,29 +13,9 @@ const INTERACTIVE_ROLES =new Set([
 ])
 
 const SAFE_ATTRIBUTES = new Set([
-	'name',
-	'type',
-	'value',
-	'placeholder',
-    'label',
-	'aria-label',
-	'aria-labelledby',
-	'aria-describedby',
-	'role',
-	'for',
-	'autocomplete',
-	'required',
-	'readonly',
-	'alt',
-	'title',
-	'src',
-	'data-testid',
-	'data-id',
-	'data-qa',
-	'data-cy',
-	'href',
-	'target',
-    'tabindex'
+	'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
+	'for','autocomplete','required','readonly','alt','title','src','data-testid','data-id','data-qa',
+	'data-cy','href','target','tabindex'
 ]);
 
     const labels = [];
