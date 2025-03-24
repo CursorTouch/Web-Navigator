@@ -4,10 +4,10 @@ from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
 from src.agent.web.context import Context,ContextConfig
 from langgraph.graph import StateGraph,END,START
-from src.memory.episodic import EpisodicMemory
 from src.agent.web.registry import Registry
 from src.agent.web.state import AgentState
 from src.inference import BaseInference
+from src.memory import BaseMemory
 from src.agent import BaseAgent
 from pydantic import BaseModel
 from datetime import datetime
@@ -26,7 +26,7 @@ main_tools=[
 ]
 
 class WebAgent(BaseAgent):
-    def __init__(self,config:BrowserConfig=None,additional_tools:list[Tool]=[],instructions:list=[],episodic_memory:EpisodicMemory=None,llm:BaseInference=None,max_iteration:int=10,use_vision:bool=False,verbose:bool=False,token_usage:bool=False) -> None:
+    def __init__(self,config:BrowserConfig=None,additional_tools:list[Tool]=[],instructions:list=[],memory:BaseMemory=None,llm:BaseInference=None,max_iteration:int=10,use_vision:bool=False,verbose:bool=False,token_usage:bool=False) -> None:
         self.name='Web Agent'
         self.description='The web agent is designed to automate the process of gathering information from the internet, such as to navigate websites, perform searches, and retrieve data.'
         self.observation_prompt=read_markdown_file('./src/agent/web/prompt/observation.md')
@@ -37,7 +37,7 @@ class WebAgent(BaseAgent):
         self.registry=Registry(main_tools+additional_tools)
         self.browser=Browser(config=config)
         self.context=Context(browser=self.browser)
-        self.episodic_memory=episodic_memory
+        self.memory=memory
         self.max_iteration=max_iteration
         self.token_usage=token_usage
         self.structured_output=None
@@ -90,8 +90,21 @@ class WebAgent(BaseAgent):
         # print('Tabs',browser_state.tabs_to_string())
         # print(browser_state.dom_state.elements_to_string())
         # Redefining the AIMessage and adding the new observation
-        action_prompt=self.action_prompt.format(evaluate=evaluate,thought=thought,action_name=action_name,action_input=json.dumps(action_input,indent=2),route=route)
-        observation_prompt=self.observation_prompt.format(iteration=self.iteration,max_iteration=self.max_iteration,observation=observation,current_url=browser_state.url,tabs=browser_state.tabs_to_string(),interactive_elements=browser_state.dom_state.elements_to_string())
+        action_prompt=self.action_prompt.format(**{
+            'evaluate':evaluate,
+            'thought':thought,
+            'action_name':action_name,
+            'action_input':json.dumps(action_input,indent=2),
+            'route':route
+        })
+        observation_prompt=self.observation_prompt.format(**{
+            'iteration':self.iteration,
+            'max_iteration':self.max_iteration,
+            'observation':observation,
+            'current_url':browser_state.url,
+            'tabs':browser_state.tabs_to_string(),
+            'interactive_elements':browser_state.dom_state.elements_to_string()
+        })
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
         return {**state,'agent_data':agent_data,'messages':messages,'prev_observation':observation}
 
@@ -110,7 +123,11 @@ class WebAgent(BaseAgent):
             evaluate='I have reached the maximum iteration limit.'
             thought='Looks like I have reached the maximum iteration limit reached.',
             final_answer='Maximum Iteration reached.'
-        answer_prompt=self.answer_prompt.format(evaluate=evaluate,thought=thought,final_answer=final_answer)
+        answer_prompt=self.answer_prompt.format(**{
+            'evaluate':evaluate,
+            'thought':thought,
+            'final_answer':final_answer
+        })
         messages=[AIMessage(answer_prompt)]
         if self.verbose:
             print(colored(f'Final Answer: {final_answer}',color='cyan',attrs=['bold']))
@@ -126,7 +143,8 @@ class WebAgent(BaseAgent):
         "Route to the next node"
         if self.iteration<self.max_iteration:
             self.iteration+=1
-            return state.get('route').lower()
+            route=state.get('route')
+            return route.lower()
         else:
             return 'final'
         
@@ -167,9 +185,9 @@ class WebAgent(BaseAgent):
             'home_dir':Path.home().as_posix(),
             'downloads_dir':self.browser.config.downloads_dir
         })
-        # Attach episodic memory to the system prompt 
-        if self.episodic_memory and self.episodic_memory.retrieve(input):
-            system_prompt=self.episodic_memory.attach_memory(system_prompt)
+        # Attach memory layer to the system prompt
+        if self.memory and self.memory.retrieve(input):
+            system_prompt=self.memory.attach_memory(system_prompt)
         human_prompt=f'Task: {input}'
         messages=[SystemMessage(system_prompt),HumanMessage(human_prompt)]
         state={
@@ -182,8 +200,8 @@ class WebAgent(BaseAgent):
         response=await self.graph.ainvoke(state,config={'recursion_limit':self.max_iteration})
         await self.close()
         # Extract and store the key takeaways of the task performed by the agent
-        if self.episodic_memory:
-            self.episodic_memory.store(response.get('messages'))
+        if self.memory:
+            self.memory.store(response.get('messages'))
         return response.get('output')
         
     def invoke(self, input: str,structured_output:BaseModel=None)->str|BaseModel:
@@ -191,10 +209,7 @@ class WebAgent(BaseAgent):
             print(f'Entering '+colored(self.name,'black','on_white'))
         output=asyncio.run(self.async_invoke(input=input,structured_output=structured_output))       
         return output
-
-    def stream(self, input:str):
-        pass
-
+    
     async def close(self):
         '''Close the browser and context followed by clean up'''
         try:
@@ -205,4 +220,7 @@ class WebAgent(BaseAgent):
         finally:
             self.context=None
             self.browser=None
+
+    def stream(self, input:str):
+        pass
 
