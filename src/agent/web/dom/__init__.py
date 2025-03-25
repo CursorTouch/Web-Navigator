@@ -14,12 +14,9 @@ class DOM:
         '''Get the state of the webpage.'''
         with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
-        # Loading the script
-        await self.context.execute_script(script)
-        # Wait for the page to load
-        page=await self.context.get_current_page()
-        await page.wait_for_load_state('domcontentloaded')
         try:
+            # Loading the script
+            await self.context.execute_script(script)
             # Get interactive elements
             nodes=await self.context.execute_script('getInteractiveElements()')
             # Add bounding boxes to the interactive elements

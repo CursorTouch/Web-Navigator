@@ -135,6 +135,7 @@ class Context:
     
     async def execute_script(self,script:str,args:list=None,enable_handle:bool=False):
         page=await self.get_current_page()
+        await page.wait_for_load_state('domcontentloaded')
         if enable_handle:
             return await page.evaluate_handle(script,args)
         return await page.evaluate(script,args)
