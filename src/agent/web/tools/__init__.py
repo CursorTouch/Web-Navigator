@@ -27,7 +27,7 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
 async def click_tool(x:int,y:int,context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
-    # await page.wait_for_load_state('domcontentloaded')
+    await page.wait_for_load_state('domcontentloaded')
     # await handle.check(force=True)
     # return f'Checked element at index {index}'
     await page.mouse.click(x=x,y=y)
@@ -38,7 +38,7 @@ async def click_tool(x:int,y:int,context:Context=None):
 async def type_tool(x:int,y:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To fill input fields or search boxes'''
     page=await context.get_current_page()
-    await page.wait_for_load_state('load')
+    await page.wait_for_load_state('domcontentloaded')
     await page.mouse.click(x=x,y=y)
     if clear=='True':
         await page.keyboard.press('Control+A')
@@ -91,6 +91,7 @@ async def back_tool(context:Context=None):
 async def key_tool(keys:str,times:int=1,context:Context=None):
     '''To perform keyboard shorcuts'''
     page=await context.get_current_page()
+    await page.wait_for_load_state('domcontentloaded')
     for _ in range(times):
         await page.keyboard.press(keys)
     return f'Pressed {keys}'

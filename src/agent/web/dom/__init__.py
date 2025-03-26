@@ -14,13 +14,13 @@ class DOM:
         '''Get the state of the webpage.'''
         with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
-        page=await self.context.get_current_page()
-        frames=page.frames
-        # Loading the script
-        await self.context.execute_script(page,script)
         try:
             nodes=[]
             interactive_elements=[]
+            page=await self.context.get_current_page()
+            # Loading the script
+            await self.context.execute_script(page,script)
+            frames=page.frames
             for frame in frames:
                 await self.context.execute_script(frame,script)
                 # Get interactive elements
