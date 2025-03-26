@@ -13,6 +13,7 @@ groq_api_key=os.getenv('GROQ_API_KEY')
 
 # LLMs used
 llm=ChatGemini(model='gemini-2.0-flash',api_key=google_api_key,temperature=0)
+# llm=ChatGroq(model='llama-3.3-70b-versatile',api_key=groq_api_key,temperature=0)
 speech_llm=AudioGroq(model='whisper-large-v3',mode='translations',api_key=groq_api_key,temperature=0)
 
 # Initialize Web Agent

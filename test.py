@@ -11,11 +11,11 @@ async def main():
     page=await context.get_current_page()
     dom=DOM(context=context)
     await goto_tool.async_invoke(url='https://google.com/',context=context)
-    await dom.get_state(use_vision=True)
+    screenshot,dom_state=await dom.get_state(use_vision=True)
     sleep(5)
     await context.close_session()
     await browser.close_browser()
-    print(page)
+
 
 if __name__=='__main__':
     asyncio.run(main())

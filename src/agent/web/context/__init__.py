@@ -116,29 +116,16 @@ class Context:
                 raise Exception('Invalid Browser Type')
         return context
     
-    async def get_selector_map(self)->dict[int,DOMElementNode]:
-        session=await self.get_session()
-        return session.state.dom_state.selector_map
-        
-    async def get_element_by_index(self,index:int)->tuple[DOMElementNode,ElementHandle]:
-        selector_map=await self.get_selector_map()
-        if index not in selector_map.keys():
-            raise Exception('Index not found')
-        element,handle=selector_map.get(index)
-        return element,handle
-    
     async def get_tabs(self)->list[Tab]:
         session=await self.get_session()
         pages=session.context.pages
         return [Tab(index,page.url,await page.title()) for index,page in enumerate(pages)]
 
     
-    async def execute_script(self,script:str,args:list=None,enable_handle:bool=False):
-        page=await self.get_current_page()
-        await page.wait_for_load_state('domcontentloaded')
+    async def execute_script(self,obj:Frame|Page,script:str,args:list=None,enable_handle:bool=False):
         if enable_handle:
-            return await page.evaluate_handle(script,args)
-        return await page.evaluate(script,args)
+            return await obj.evaluate_handle(script,args)
+        return await obj.evaluate(script,args)
     
     async def get_screenshot(self,save_screenshot:bool=False,full_page:bool=False):
         page=await self.get_current_page()
@@ -152,10 +139,3 @@ class Context:
         await page.wait_for_timeout(2*1000)
         screenshot=await page.screenshot(path=path,full_page=full_page,animations='disabled',type='jpeg')
         return screenshot
-    
-    async def get_parent_iframe(self,node:ElementHandle)->Frame|None:
-        parent_iframe=await self.execute_script("[node]=>node.closest('iframe')",[node],enable_handle=True)
-        if parent_iframe:
-            frame_handle=parent_iframe.as_element()
-            return await frame_handle.content_frame()
-        return None

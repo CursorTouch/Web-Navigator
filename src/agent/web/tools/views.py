@@ -10,10 +10,12 @@ class Clipboard(SharedBaseModel):
     text:str = Field(...,description="the text to copy to clipboard",examples=["hello world"])
 
 class Click(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to click",examples=[0])
+    x:int = Field(...,description="the x coordinate of the element to click",examples=[0])
+    y:int = Field(...,description="the y coordinate of the element to click",examples=[0])
 
 class Type(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to type",examples=[0])
+    x:int = Field(...,description="the x coordinate of the element to type in",examples=[0])
+    y:int = Field(...,description="the y coordinate of the element to type in",examples=[0])
     text:str = Field(...,description="the text to type",examples=["hello world"])
     clear:Literal['True','False']=Field(description="whether to clear the text before typing",default="False",examples=['True'])
 

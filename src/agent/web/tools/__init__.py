@@ -24,33 +24,27 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         raise ValueError('Invalid mode. Use "copy" or "paste".')
 
 @Tool('Click Tool',params=Click)
-async def click_tool(index:int,context:Context=None):
+async def click_tool(x:int,y:int,context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
-    element,handle=await context.get_element_by_index(index)
-    # await handle.scroll_into_view_if_needed()
-    if element.attributes.get('type','') in ['checkbox','radio']:
-        await page.wait_for_load_state('domcontentloaded')
-        await handle.check(force=True)
-        return f'Checked element at index {index}'
-    else:
-        await handle.click()
-        await page.wait_for_load_state('domcontentloaded')
-        return f'Clicked element at index {index}'
-
+    # await page.wait_for_load_state('domcontentloaded')
+    # await handle.check(force=True)
+    # return f'Checked element at index {index}'
+    await page.mouse.click(x=x,y=y)
+    await page.wait_for_load_state('domcontentloaded')
+    return f'Clicked on the element at ({x},{y})'
 
 @Tool('Type Tool',params=Type)
-async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
+async def type_tool(x:int,y:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To fill input fields or search boxes'''
     page=await context.get_current_page()
-    _,handle=await context.get_element_by_index(index)
     await page.wait_for_load_state('load')
-    await handle.scroll_into_view_if_needed()
+    await page.mouse.click(x=x,y=y)
     if clear=='True':
-        await handle.press('Control+A')
-        await handle.press('Backspace')
-    await handle.type(text,delay=80)
-    return f'Typed {text} in element {index}'
+        await page.keyboard.press('Control+A')
+        await page.keyboard.press('Backspace')
+    await page.keyboard.type(text,delay=80)
+    return f'Typed {text} in element at ({x},{y})'
 
 @Tool('Wait Tool',params=Wait)
 async def wait_tool(time:int,context:Context=None):

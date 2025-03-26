@@ -5,14 +5,14 @@ from playwright.async_api import ElementHandle
 class BoundingBox:
     left:int
     top:int
-    right:int
-    bottom:int
+    width:int
+    height:int
 
     def to_string(self):
-        return f'({self.left},{self.top},{self.right},{self.bottom})'
+        return f'({self.left},{self.top},{self.width},{self.height})'
     
     def to_dict(self):
-        return {'left':self.left,'top':self.top,'right':self.right,'bottom':self.bottom}
+        return {'left':self.left,'top':self.top,'width':self.width,'height':self.height}
 
 @dataclass
 class CenterCord:
@@ -42,8 +42,7 @@ class DOMElementNode:
     
 @dataclass
 class DOMState:
-    nodes: list[tuple[DOMElementNode,ElementHandle]]=field(default_factory=list)
-    selector_map:dict[int,tuple[DOMElementNode,ElementHandle]]=field(default_factory=dict)
+    nodes: list[DOMElementNode]=field(default_factory=list)
 
     def elements_to_string(self)->str:
-        return '\n'.join([f'{index} - Tag: {node.tag} Role: {node.role} Name: {node.name} Attributes: {node.attributes} Cordinates: {node.center.to_string()}' for index,(node,_) in enumerate(self.nodes)])
+        return '\n'.join([f'{index} - Tag: {node.tag} Role: {node.role} Name: {node.name} Attributes: {node.attributes} Cordinates: {node.center.to_string()}' for index,(node) in enumerate(self.nodes)])

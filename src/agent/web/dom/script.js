@@ -1,25 +1,24 @@
-const INTERACTIVE_TAGS =new Set([
-    'a', 'button', 'details', 'embed', 'input','option','canvas',
-    'menu', 'menuitem', 'object', 'select', 'textarea', 'summary'
-])
+    const INTERACTIVE_TAGS =new Set([
+        'a', 'button', 'details', 'embed', 'input','option','canvas',
+        'menu', 'menuitem', 'object', 'select', 'textarea', 'summary'
+    ])
 
-const INTERACTIVE_ROLES =new Set([
-    'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
-    'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'grid',
-    'option', 'progressbar', 'scrollbar', 'searchbox','listbox','listbox',
-    'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 'a-dropdown-button', 'click',
-    'menuitemcheckbox', 'menuitemradio', 'a-button-text', 'button-text', 'button-icon', 'button-icon-only', 
-    'button-text-icon-only', 'dropdown', 'combobox'
-])
+    const INTERACTIVE_ROLES =new Set([
+        'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
+        'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'grid',
+        'option', 'progressbar', 'scrollbar', 'searchbox','listbox','listbox',
+        'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 'a-dropdown-button', 'click',
+        'menuitemcheckbox', 'menuitemradio', 'a-button-text', 'button-text', 'button-icon', 'button-icon-only', 
+        'button-text-icon-only', 'dropdown', 'combobox'
+    ])
 
-const SAFE_ATTRIBUTES = new Set([
-	'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
-	'for','autocomplete','required','readonly','alt','title','src','data-testid','data-id','data-qa',
-	'data-cy','href','target','tabindex'
-]);
+    const SAFE_ATTRIBUTES = new Set([
+        'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
+        'for','autocomplete','required','readonly','alt','title','src','data-testid','data-id','data-qa',
+        'data-cy','href','target','tabindex'
+    ]);
 
     const labels = [];
-    const selectorMap = {};
 
     // Function to get a random color
     function getRandomColor() {
@@ -42,11 +41,11 @@ const SAFE_ATTRIBUTES = new Set([
         });
     }
 
-    // Extract visible interactive elements
-    async function getInteractiveElements(node=document.body) {
-
+    // Extract visible interactive elements`
+    async function getInteractiveElements(node=document.body,frame=null) {
         const interactiveElements = [];  
-        await waitForPageToLoad()
+        await waitForPageToLoad();
+
         function isVisible(element) {
             let type = element.getAttribute('type');
             // The radio and checkbox elements are all ready invisible so we can skip them
@@ -137,9 +136,24 @@ const SAFE_ATTRIBUTES = new Set([
                 // Check if the element is covered by another element
                 const isCovered = !isElementCovered(currentNode);
                 if (isCovered) {
-                    const boundingBox = currentNode.getBoundingClientRect();
-                    const xCenter = boundingBox.left + boundingBox.width / 2;
-                    const yCenter = boundingBox.top + boundingBox.height / 2;
+                    const rect = currentNode.getBoundingClientRect();
+                    let frame = window.frameElement;
+                    let boundingBox=null;
+                    let width=rect.width;
+                    let height=rect.height;
+                    if (frame) {
+                        let frameRect = frame.getBoundingClientRect();
+                        let left=rect.left + frameRect.left;
+                        let top=rect.top + frameRect.top;
+                        boundingBox = { left, top, width, height };
+                    }
+                    else{
+                        let left=rect.left;
+                        let top=rect.top;
+                        boundingBox = { left, top, width, height };
+                    }
+                    const x = boundingBox.left + boundingBox.width / 2;
+                    const y = boundingBox.top + boundingBox.height / 2;
                     interactiveElements.push({
                         tag: currentNode.tagName.toLowerCase(),
                         role: currentNode.getAttribute('role') || 'none',  // Default to 'none' if no role is found
@@ -154,8 +168,7 @@ const SAFE_ATTRIBUTES = new Set([
                                 .map(attr => [attr.name, attr.value])
                         ),
                         box: boundingBox || null,  // Avoid undefined errors
-                        center: { x: xCenter, y: yCenter },
-                        handle: currentNode
+                        center: { x, y }
                     });
                 }
             }
@@ -164,32 +177,18 @@ const SAFE_ATTRIBUTES = new Set([
             if(shadowRoot){
                 Array.from(shadowRoot.children).forEach(child => traverseDom(child));
             }
-            // Handle iframes
-            if(tagName.toLowerCase() === 'iframe') {
-                try{
-                    const iframeDocument = currentNode.contentDocument || currentNode.contentWindow.document;
-                    traverseDom(iframeDocument.body);
-                }
-                catch (e) {
-                    console.log('The iframe is not accessable');
-                }
-            }
-            // Go deeper if the current node is non interactive
+            
             if(!isClickable(currentNode)) {
                 currentNode.childNodes.forEach(child => traverseDom(child));
             }
         }
-
         traverseDom(node);
-        selectorMapping(interactiveElements);
         return interactiveElements;
     }
 
     // Mark page by placing bounding boxes and labels
     function mark_page(elements) {
-        let index = 0; // Start numbering from 1
-
-        elements.forEach(element => {
+        elements.forEach((element,index) => {
             const { box } = element;
             if (!box) return;
 
@@ -223,7 +222,6 @@ const SAFE_ATTRIBUTES = new Set([
             boundingBox.appendChild(label);
             labels.push(boundingBox);
             document.body.appendChild(boundingBox);
-            index++;
         });
     }
 
@@ -233,17 +231,4 @@ const SAFE_ATTRIBUTES = new Set([
             document.body.removeChild(label);
         }
         labels.length = 0;
-    }
-
-
-    // Function to populate the registry with interactive elements
-    function selectorMapping(elements) {
-        elements.forEach((element, index) => {
-            selectorMap[index] = element.handle;  // Store the element object directly
-        });
-    }
-
-    // Function to get element by index
-    function getElementByIndex(index) {
-        return selectorMap[index] || null;
     }

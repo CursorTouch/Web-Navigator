@@ -14,56 +14,39 @@ class DOM:
         '''Get the state of the webpage.'''
         with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
+        page=await self.context.get_current_page()
+        frames=page.frames
+        # Loading the script
+        await self.context.execute_script(page,script)
         try:
-            # Loading the script
-            await self.context.execute_script(script)
-            # Get interactive elements
-            nodes=await self.context.execute_script('getInteractiveElements()')
-            # Add bounding boxes to the interactive elements
+            nodes=[]
+            interactive_elements=[]
+            for frame in frames:
+                await self.context.execute_script(frame,script)
+                # Get interactive elements
+                elements=await self.context.execute_script(frame,'getInteractiveElements()')
+                interactive_elements.extend(elements)
             if use_vision:
-                await self.context.execute_script('nodes=>{mark_page(nodes)}',nodes)
+                # Add bounding boxes to the interactive elements
+                await self.context.execute_script(page,'interactive_elements=>{mark_page(interactive_elements)}',interactive_elements)
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
-                await self.context.execute_script('unmark_page()')
+                # Remove bounding boxes from the interactive elements
+                await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
-            selector_map=await self.build_selector_map(nodes)
+            for element in interactive_elements:
+                node=DOMElementNode(**{
+                    'tag':element.get('tag'),
+                    'role':element.get('role'),
+                    'name':element.get('name'),
+                    'attributes':element.get('attributes'),
+                    'center':CenterCord(**element.get('center')),
+                    'bounding_box':BoundingBox(**element.get('box')),
+                })
+                nodes.append(node)
         except Exception as e:
             print(e)
             nodes=[]
             screenshot=None
-            selector_map={}
-        return (screenshot,DOMState(nodes=list(selector_map.values()),selector_map=selector_map))
-
-
-    async def build_selector_map(self, nodes: list[dict]) -> dict[int, tuple[DOMElementNode, ElementHandle]]:
-        """Build a map from element index to node."""
-        async def process_node(index: int, node: dict):
-            handle = await self.context.execute_script(
-                'index => getElementByIndex(index)', 
-                index, 
-                enable_handle=True
-            )
-            box:dict=node.get('box')
-            center:dict=node.get('center')
-            element_handle = handle.as_element()
-            element_node = DOMElementNode(
-                tag=node.get('tag'),
-                role=node.get('role'),
-                name=node.get('name'),
-                attributes=node.get('attributes'),
-                center=CenterCord(**{
-                    'x':center.get('x'),
-                    'y':center.get('y')
-                }),
-                bounding_box=BoundingBox(**{
-                    'left': box.get('left'),
-                    'top': box.get('top'),
-                    'right': box.get('right'),
-                    'bottom': box.get('bottom')
-                })
-            )
-            return index, (element_node, element_handle)
-
-        tasks = [process_node(index, node) for index, node in enumerate(nodes)]
-        results = await asyncio.gather(*tasks)
-        return dict(results)
+        # print(nodes)
+        return (screenshot,DOMState(nodes=nodes))
