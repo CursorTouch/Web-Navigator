@@ -16,6 +16,5 @@ async def main():
     await context.close_session()
     await browser.close_browser()
 
-
 if __name__=='__main__':
     asyncio.run(main())

@@ -3,6 +3,10 @@
         'menu', 'menuitem', 'object', 'select', 'textarea', 'summary'
     ])
 
+    const EXCLUDED_TAGS =new Set([
+        'style', 'script', 'noscript'
+    ])
+
     const INTERACTIVE_ROLES =new Set([
         'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
         'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'grid',
@@ -127,6 +131,7 @@
             if (currentNode.nodeType !== Node.ELEMENT_NODE) return;
 
             const tagName = currentNode.tagName.toLowerCase();
+            if (EXCLUDED_TAGS.has(tagName)) return;
             const role = currentNode.getAttribute('role');
 
             const hasInteractiveTag = INTERACTIVE_TAGS.has(tagName);
@@ -137,23 +142,22 @@
                 const isCovered = !isElementCovered(currentNode);
                 if (isCovered) {
                     const rect = currentNode.getBoundingClientRect();
+                    let left = rect.left;
+                    let top = rect.top;
+                    let width = rect.width;
+                    let height = rect.height;
                     let frame = window.frameElement;
-                    let boundingBox=null;
-                    let width=rect.width;
-                    let height=rect.height;
-                    if (frame) {
+                    // If the element is in an iframe, adjust the coordinates
+                    while (frame) {
                         let frameRect = frame.getBoundingClientRect();
-                        let left=rect.left + frameRect.left;
-                        let top=rect.top + frameRect.top;
-                        boundingBox = { left, top, width, height };
+                        left += frameRect.left;
+                        top += frameRect.top;
+                        frame = frame.ownerDocument.defaultView.frameElement;
                     }
-                    else{
-                        let left=rect.left;
-                        let top=rect.top;
-                        boundingBox = { left, top, width, height };
-                    }
+                    const boundingBox = { left, top, width, height };
                     const x = boundingBox.left + boundingBox.width / 2;
                     const y = boundingBox.top + boundingBox.height / 2;
+                    
                     interactiveElements.push({
                         tag: currentNode.tagName.toLowerCase(),
                         role: currentNode.getAttribute('role') || 'none',  // Default to 'none' if no role is found
