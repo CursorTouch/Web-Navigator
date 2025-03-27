@@ -24,7 +24,8 @@ class DOM:
             elements=await self.context.execute_script(page,'getInteractiveElements()')
             interactive_elements.extend(elements)
             frames=page.frames
-            frames.pop(0) # Delete the main frame
+            # Delete the main frame
+            frames.pop(0) 
             try:
                 for frame in frames:
                     frame_element = await frame.frame_element()
@@ -41,7 +42,7 @@ class DOM:
                     elements=await self.context.execute_script(frame,'getInteractiveElements()')
                     interactive_elements.extend(elements)
             except Exception as e:
-                print(f"Failed to get elements from frame {frame.url}: {e}")
+                print(f"Failed to get elements from frame: {frame.url}\nError: {e}")
             if use_vision:
                 # Add bounding boxes to the interactive elements
                 await self.context.execute_script(page,'interactive_elements=>{mark_page(interactive_elements)}',interactive_elements)
@@ -61,7 +62,7 @@ class DOM:
                 })
                 nodes.append(node)
         except Exception as e:
-            print(f"Failed to get state: {e}",e)
+            print(f"Failed to get elements from page: {page.url}\nError: {e}")
             nodes=[]
             screenshot=None
         # print(nodes)

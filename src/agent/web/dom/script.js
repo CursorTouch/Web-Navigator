@@ -16,7 +16,7 @@
         'button-text-icon-only', 'dropdown', 'combobox'
     ])
 
-    const CURSORS=new Set(["pointer", "move", "text", "grab", "cell"])
+    const CURSOR_TYPES=new Set(["pointer", "move", "text", "grab", "cell"])
 
     const SAFE_ATTRIBUTES = new Set([
         'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
@@ -102,7 +102,7 @@
 
         function isClickable(element) {
             return element.hasAttribute('onclick') || element.hasAttribute('v-on:click') || element.hasAttribute('@click') || element.hasAttribute("ng-click") ||
-            element.getAttribute('role') === 'button' ||  CURSORS.has(element.getAttribute('cursor'));
+            element.getAttribute('role') === 'button' ||  CURSOR_TYPES.has(element.getAttribute('cursor'));
         }
 
         function isElementCovered(element) {
