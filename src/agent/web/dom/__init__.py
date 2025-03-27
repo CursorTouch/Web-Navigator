@@ -1,5 +1,5 @@
 from src.agent.web.dom.views import DOMElementNode, DOMState, CenterCord, BoundingBox
-from playwright.async_api import Frame
+from playwright.async_api import Frame,Page
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -19,17 +19,19 @@ class DOM:
             page=await self.context.get_current_page()
             # Loading the script
             await self.context.execute_script(page,script)
-            frame=page.main_frame
-            async def traverse_frame(frame:Frame):
-                if frame.is_detached():
-                    return []
-                await self.context.execute_script(frame,script)
-                elements=list(await self.context.execute_script(frame,'getInteractiveElements()'))
-                for child_frame in frame.child_frames:
-                    elements.extend(await traverse_frame(child_frame))
-                return elements
-            interactive_elements=await traverse_frame(frame)
-            print(interactive_elements)
+            interactive_elements.extend(await self.context.execute_script(page,'getInteractiveElements()'))
+            frames=page.frames
+            frames.pop(0)
+            try:
+                for frame in frames:
+                    width,height=await self.get_dimensions(frame)
+                    frame_area=width*height
+                    if frame_area<100 or frame.is_detached():
+                        continue
+                    await self.context.execute_script(frame,script)
+                    interactive_elements.extend(await self.context.execute_script(frame,'getInteractiveElements()'))
+            except Exception as e:
+                print(e)
             if use_vision:
                 # Add bounding boxes to the interactive elements
                 await self.context.execute_script(page,'interactive_elements=>{mark_page(interactive_elements)}',interactive_elements)
@@ -54,3 +56,15 @@ class DOM:
             screenshot=None
         # print(nodes)
         return (screenshot,DOMState(nodes=nodes))
+    
+    async def get_dimensions(self,obj:Frame|Page)->tuple[int,int]:
+        if isinstance(obj,Frame):
+            width=await self.context.execute_script(obj,'window.frameElement?.offsetWidth')
+            height=await self.context.execute_script(obj,'window.frameElement?.offsetHeight')
+        elif isinstance(obj,Page):
+            width=await self.context.execute_script(obj,'window.innerWidth')
+            height=await self.context.execute_script(obj,'window.innerHeight')
+        else:
+            raise Exception('Object is not a Frame or Page')
+        return (width,height)
+

@@ -127,10 +127,6 @@ class Context:
             return await obj.evaluate_handle(script,args)
         return await obj.evaluate(script,args)
     
-    async def get_element_from_point(self,x:int,y:int)->ElementHandle:
-        page=await self.get_current_page()
-        return await self.execute_script(page,f"document.elementFromPoint({x},{y})",enable_handle=True)
-    
     async def get_screenshot(self,save_screenshot:bool=False,full_page:bool=False):
         page=await self.get_current_page()
         if save_screenshot:

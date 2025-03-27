@@ -19,7 +19,7 @@
     const SAFE_ATTRIBUTES = new Set([
         'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
         'for','autocomplete','required','readonly','alt','title','src','data-testid','data-id','data-qa',
-        'data-cy','href','target','tabindex'
+        'data-cy','href','target','tabindex','class'
     ]);
 
     const labels = [];
@@ -152,11 +152,11 @@
                         let frameRect = frame.getBoundingClientRect();
                         left += frameRect.left;
                         top += frameRect.top;
-                        frame = frame.ownerDocument.defaultView.frameElement;
+                        frame = frame.ownerDocument.defaultView?.frameElement;
                     }
                     const boundingBox = { left, top, width, height };
-                    const x = boundingBox.left + boundingBox.width / 2;
-                    const y = boundingBox.top + boundingBox.height / 2;
+                    const x = Math.floor(boundingBox.left + boundingBox.width / 2);
+                    const y = Math.floor(boundingBox.top + boundingBox.height / 2);
                     
                     interactiveElements.push({
                         tag: currentNode.tagName.toLowerCase(),
