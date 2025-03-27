@@ -1,3 +1,4 @@
+```xml
 <Observation>
 Execution Step: ({iteration}/{max_iteration})
 
@@ -11,3 +12,4 @@ Available Tabs:
 Interactive Elements:
 {interactive_elements}
 </Observation>
+```xml

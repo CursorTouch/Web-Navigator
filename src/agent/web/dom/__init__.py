@@ -2,6 +2,7 @@ from src.agent.web.dom.views import DOMElementNode, DOMState, CenterCord, Boundi
 from src.agent.web.context.config import IGNORED_URL_PATTERNS
 from urllib.parse import urlparse
 from typing import TYPE_CHECKING
+from asyncio import sleep
 
 if TYPE_CHECKING:
     from src.agent.web.context import Context
@@ -19,8 +20,8 @@ class DOM:
             interactive_elements=[]
             page=await self.context.get_current_page()
             await page.wait_for_load_state('domcontentloaded')
-            # Loading the script
             await self.context.execute_script(page,script)
+            await sleep(1.25)
             elements=await self.context.execute_script(page,'getInteractiveElements()')
             interactive_elements.extend(elements)
             frames=page.frames
@@ -38,7 +39,9 @@ class DOM:
                     is_ad_url=any(netloc in pattern for pattern in IGNORED_URL_PATTERNS)
                     if (width<10 or height<10) or is_ad_url or frame.is_detached():
                         continue
+                    await frame.wait_for_load_state('domcontentloaded')
                     await self.context.execute_script(frame,script)
+                    await sleep(1.25)
                     elements=await self.context.execute_script(frame,'getInteractiveElements()')
                     interactive_elements.extend(elements)
             except Exception as e:

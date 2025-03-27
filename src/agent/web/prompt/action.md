@@ -1,3 +1,4 @@
+```xml
 <Option>
     <Evaluate>{evaluate}</Evaluate>
     <Thought>{thought}</Thought>
@@ -5,3 +6,4 @@
     <Action-Input>{action_input}</Action-Input>
     <Route>{route}</Route>
 </Option>
+```

@@ -57,7 +57,7 @@ Label: <element_index> - Tag: <element_tag> Role: <element_role> Name: <element_
     - element_role : The role for that element
     - element_name : The name present for that element
     - element_attributes: The attributes present in that element to convey more information (it will be in dictionary format).
-    - element_cordinates : The center cordinates of that element
+    - element_cordinates : The center cordinates of that element (x,y)
 
 **Example:** 8 - Tag: input Role: button Name: Google Search attributes: {{'value': 'Google Search', 'aria-label': 'Google Search', 'type': 'submit'}} Cordinates: (23,5)
 
@@ -135,6 +135,7 @@ In this mode, you will use the correct tool to interact with the webpage based o
 
 Your response should follow this strict format:
 
+```xml
 <Option>
   <Evaluate>Evaluate your previous thought, action and observation against the current list of interactive elements (current state of the page). Now based on this check whether you made mistakes in making the correct action when comparing with the current state of page, reflect and critic the decisions you make when needed.</Evaluate>
   <Thought>Think step by step. Solve the task by utilitizing the knowledge gained from the list of Interactive Elements and the screenshot of the webpage, utilize the revelant memories if available, also understand the tabs that are already open, finally find what are missing contents and consider integrating the thought process from all previous steps. Based on all of these make decision.</Thought>
@@ -142,6 +143,7 @@ Your response should follow this strict format:
   <Action-Input>{{'param1':'value1','param2':'value2'...}}</Action-Input>
   <Route>Action</Route>
 </Option>
+```
 
 ---
 
@@ -151,13 +153,15 @@ If you have gathered enough information and can confidently tell the user about 
 
 Your response should follow this strict format:
 
+```xml
 <Option>
   <Evaluate>Evaluate your previous thought, action and observation against the current list of interactive elements (current state of the page). Now based on this check whether you made mistakes in making the correct action when comparing with the current state of page, reflect and critic the decisions you make when needed.</Evaluate>
   <Thought>Explanation of why you are confident that the final answer is ready also consider integrating the thought process from all previous steps</Thought>
   <Final-Answer>Provide the final answer to the user in markdown format.</Final-Answer>
   <Route>Final</Route>
 </Option>
+```
 
 ---
 
-Stick strictly to the formats of **Option 1** or **Option 2**. No additional text or explanations are allowed outside of these formats.
+Strictly follow the format of **Option 1** or **Option 2** and not allowed to modify this format at all.

@@ -27,11 +27,10 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
 async def click_tool(x:int,y:int,context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
-    await page.wait_for_load_state('domcontentloaded')
+    await page.wait_for_load_state('domcontentloaded') 
     # await handle.check(force=True)
     # return f'Checked element at index {index}'
     await page.mouse.click(x=x,y=y)
-    await page.wait_for_load_state('domcontentloaded')
     return f'Clicked on the element at ({x},{y})'
 
 @Tool('Type Tool',params=Type)
