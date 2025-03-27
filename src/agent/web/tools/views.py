@@ -41,8 +41,8 @@ class Download(SharedBaseModel):
     url:str = Field(...,description="url of the file to download",examples=["https://www.example.com/file.txt","https://abc.org/pdf/54655"])
     filename:str=Field(...,description="the name of the file to download",examples=["file.txt","xy4rs.pdf"])
 
-class Extract(SharedBaseModel):
-    format:Literal['markdown','html','text'] = Field(description="the format of content to be like",examples=['text'],default='markdown')
+class Scrape(SharedBaseModel):
+    format:Literal['markdown','text'] = Field(description="the format of content to be like",examples=['text'],default='markdown')
 
 class Tab(SharedBaseModel):
     mode:Literal['open','close','switch'] = Field(...,description="the mode of the tab",examples=['open'])

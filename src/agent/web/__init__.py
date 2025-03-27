@@ -1,4 +1,4 @@
-from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,extract_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool
+from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -19,7 +19,7 @@ import asyncio
 import json
 
 main_tools=[
-    click_tool,goto_tool,extract_tool,
+    click_tool,goto_tool,scrape_tool,
     type_tool,scroll_tool,wait_tool,
     clipboard_tool,back_tool,key_tool,tab_tool
 ]

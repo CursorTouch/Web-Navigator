@@ -1,4 +1,4 @@
-from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Extract,Tab,Upload,Menu,Form
+from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Form
 from main_content_extractor import MainContentExtractor
 from src.agent.web.context import Context
 from typing import Literal,Optional
@@ -118,9 +118,9 @@ async def download_tool(index:int=None,url:str=None,filename:str=None,context:Co
             f.write(response.content)
     return f'Downloaded {filename} from {url} and saved it to {path}'
 
-@Tool('Extract Tool',params=Extract)
-async def extract_tool(format:Literal['markdown','html','text']='markdown',context:Context=None):
-    '''Scrapes the content of the current webpage'''
+@Tool('Scrape Tool',params=Scrape)
+async def scrape_tool(format:Literal['markdown','text']='markdown',context:Context=None):
+    '''Scrape the contents of the entire webpage'''
     page=await context.get_current_page()
     await page.wait_for_load_state('domcontentloaded')
     html=await page.content()
