@@ -1,5 +1,6 @@
 from src.agent.web.dom.views import DOMElementNode, DOMState, CenterCord, BoundingBox
-from playwright.async_api import Frame,Page
+from src.agent.web.context.config import IGNORED_URL_PATTERNS
+from urllib.parse import urlparse
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -17,21 +18,30 @@ class DOM:
             nodes=[]
             interactive_elements=[]
             page=await self.context.get_current_page()
+            await page.wait_for_load_state('domcontentloaded')
             # Loading the script
             await self.context.execute_script(page,script)
-            interactive_elements.extend(await self.context.execute_script(page,'getInteractiveElements()'))
+            elements=await self.context.execute_script(page,'getInteractiveElements()')
+            interactive_elements.extend(elements)
             frames=page.frames
-            frames.pop(0)
+            frames.pop(0) # Delete the main frame
             try:
                 for frame in frames:
-                    width,height=await self.get_dimensions(frame)
-                    frame_area=width*height
-                    if frame_area<100 or frame.is_detached():
+                    frame_element = await frame.frame_element()
+                    bbox = await frame_element.bounding_box()
+                    netloc=urlparse(frame.url).netloc # Deletes the about:blank & data: urls
+                    if bbox is None or netloc=='':
+                        continue
+                    # print(netloc,bbox)
+                    width,height=bbox['width'],bbox['height']
+                    is_ad_url=any(netloc in pattern for pattern in IGNORED_URL_PATTERNS)
+                    if (width<10 or height<10) or is_ad_url or frame.is_detached():
                         continue
                     await self.context.execute_script(frame,script)
-                    interactive_elements.extend(await self.context.execute_script(frame,'getInteractiveElements()'))
+                    elements=await self.context.execute_script(frame,'getInteractiveElements()')
+                    interactive_elements.extend(elements)
             except Exception as e:
-                print(e)
+                print(f"Failed to get elements from frame {frame.url}: {e}")
             if use_vision:
                 # Add bounding boxes to the interactive elements
                 await self.context.execute_script(page,'interactive_elements=>{mark_page(interactive_elements)}',interactive_elements)
@@ -51,20 +61,9 @@ class DOM:
                 })
                 nodes.append(node)
         except Exception as e:
-            print(e)
+            print(f"Failed to get state: {e}",e)
             nodes=[]
             screenshot=None
         # print(nodes)
         return (screenshot,DOMState(nodes=nodes))
-    
-    async def get_dimensions(self,obj:Frame|Page)->tuple[int,int]:
-        if isinstance(obj,Frame):
-            width=await self.context.execute_script(obj,'window.frameElement?.offsetWidth')
-            height=await self.context.execute_script(obj,'window.frameElement?.offsetHeight')
-        elif isinstance(obj,Page):
-            width=await self.context.execute_script(obj,'window.innerWidth')
-            height=await self.context.execute_script(obj,'window.innerHeight')
-        else:
-            raise Exception('Object is not a Frame or Page')
-        return (width,height)
 

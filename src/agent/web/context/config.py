@@ -34,6 +34,7 @@ IGNORED_URL_PATTERNS = [
 	'analytics',
 	'tracking',
 	'telemetry',
+    'googletagmanager'
 	'beacon',
 	'metrics',
 	# Ad-related
@@ -41,6 +42,7 @@ IGNORED_URL_PATTERNS = [
 	'adsystem',
 	'adserver',
 	'advertising',
+    'cdn.optimizely',
 	# Social media widgets
 	'facebook.com/plugins',
 	'platform.twitter',
@@ -65,5 +67,5 @@ IGNORED_URL_PATTERNS = [
 	'wss://',
 	# Common CDNs for dynamic content
 	'cloudfront.net',
-	'fastly.net',
+	'fastly.net'
 ]
