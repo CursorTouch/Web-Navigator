@@ -23,7 +23,7 @@ browser_instance_dir=os.environ.get('BROWSER_INSTANCE_DIR')
 user_data_dir=os.environ.get('USER_DATA_DIR')
 downloads_dir=os.environ.get('DOWNLOADS_DIR')
 
-config=BrowserConfig(browser='edge',browser_instance_dir=browser_instance_dir,user_data_dir=None,downloads_dir=downloads_dir,headless=False)
+config=BrowserConfig(browser='edge',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=downloads_dir,headless=False)
 agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=False,max_iteration=100,token_usage=False)
 
 mode=input('Enter the mode of input (text/voice): ')

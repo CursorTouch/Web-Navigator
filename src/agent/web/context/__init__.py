@@ -121,12 +121,13 @@ class Context:
     async def get_tabs(self)->list[Tab]:
         session=await self.get_session()
         pages=session.context.pages
-        return [Tab(index,page.url,await page.title()) for index,page in enumerate(pages)]
+        return [Tab(index+1,page.url,await page.title()) for index,page in enumerate(pages)]
 
     
     async def execute_script(self,obj:Frame|Page,script:str,args:list=None,enable_handle:bool=False):
         if enable_handle:
-            return await obj.evaluate_handle(script,args)
+            handle=await obj.evaluate_handle(script,args)
+            return handle.as_element()
         return await obj.evaluate(script,args)
     
     def is_ad_url(self,url:str)->bool:

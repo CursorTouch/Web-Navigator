@@ -19,9 +19,10 @@ import asyncio
 import json
 
 main_tools=[
-    click_tool,goto_tool,scrape_tool,
-    type_tool,scroll_tool,wait_tool,
-    clipboard_tool,back_tool,key_tool,tab_tool
+    download_tool,click_tool,goto_tool,scrape_tool,  
+    type_tool,scroll_tool,wait_tool,menu_tool,
+    clipboard_tool,back_tool,key_tool,tab_tool,
+    upload_tool
 ]
 
 class WebAgent(BaseAgent):

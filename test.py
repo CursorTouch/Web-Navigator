@@ -15,6 +15,7 @@ downloads_dir=os.environ.get('DOWNLOADS_DIR')
 async def main():
     browser=Browser(config=BrowserConfig(headless=False,browser='chrome',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=None))
     context=Context(browser=browser)
+    await context.init_session()
     page=await context.get_current_page()
     dom=DOM(context=context)
     await goto_tool.async_invoke(url='https://uber.com',context=context)

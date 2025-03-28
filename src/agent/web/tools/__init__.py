@@ -24,7 +24,7 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         raise ValueError('Invalid mode. Use "copy" or "paste".')
 
 @Tool('Click Tool',params=Click)
-async def click_tool(x:int,y:int,mode:Literal['navigate','click']='navigate',context:Context=None):
+async def click_tool(x:int,y:int,mode:Literal['navigate','spwan','click']='navigate',context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
     if mode=='navigate':
@@ -32,6 +32,10 @@ async def click_tool(x:int,y:int,mode:Literal['navigate','click']='navigate',con
             await page.mouse.click(x=x,y=y)
         current_url=page.url
         return f'Clicked on the element at ({x},{y}) and navigated to {current_url}'
+    elif mode=='spwan':
+        session=context.session.context
+        async with session.expect_page():
+            await page.mouse.click(x=x,y=y)
     elif mode=='click':
         await page.mouse.click(x=x,y=y)
         return f'Clicked on the element at ({x},{y})'
@@ -101,15 +105,13 @@ async def key_tool(keys:str,times:int=1,context:Context=None):
     return f'Pressed {keys}'
 
 @Tool('Download Tool',params=Download)
-async def download_tool(index:int=None,url:str=None,filename:str=None,context:Context=None):
+async def download_tool(x:int,y:int,url:str=None,filename:str=None,context:Context=None):
     '''To download a file (e.g., pdf, image, video, audio) to the system'''
     folder_path=Path(context.browser.config.downloads_dir)
     try:
         page=await context.get_current_page()
-        _,handle=await context.get_element_by_index(index)
         async with page.expect_download(timeout=5*1000) as download_info:
-            await handle.scroll_into_view_if_needed()
-            await handle.click()
+            await page.mouse.click(x=x,y=y)
         download=await download_info.value
         if filename is None:
             filename=download.suggested_filename
@@ -145,7 +147,7 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
         page=session.current_page
         await page.close()
         pages=session.context.pages
-        if tab_index is not None and tab_index+1>len(pages):
+        if tab_index is not None and tab_index>len(pages):
             raise IndexError('Index out of range')
         page=pages[-1]
         session.current_page=page
@@ -154,7 +156,7 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
         return f'Closed current tab and switched to previous tab'
     elif mode=='switch':
         pages=session.context.pages
-        if tab_index is not None and tab_index+1>len(pages):
+        if tab_index is not None and tab_index>len(pages):
             raise IndexError('Index out of range')
         page=pages[tab_index]
         session.current_page=page
@@ -165,31 +167,31 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
         raise ValueError('Invalid mode')
     
 @Tool('Upload Tool',params=Upload)   
-async def upload_tool(index:int,filenames:list[str],context:Context=None):
+async def upload_tool(x:int,y:int,filenames:list[str],context:Context=None):
     '''To upload a file to the webpage'''
     files=[Path(getcwd()).joinpath('./uploads',filename) for filename in filenames]
     page=await context.get_current_page()
-    _,handle=await context.get_element_by_index(index)
     async with page.expect_file_chooser() as file_chooser_info:
-        await handle.scroll_into_view_if_needed()
-        await handle.click()
+        await page.mouse.click(x=x,y=y)
     file_chooser=await file_chooser_info.value
+    handle=file_chooser.element
     if file_chooser.is_multiple():
         await handle.set_input_files(files=files)
     else:
         await handle.set_input_files(files=files[0])
     await page.wait_for_load_state('load')
-    return f'Uploaded {filenames} to element {index}'
+    return f'Uploaded {filenames} to element at ({x},{y})'
 
 
 @Tool('Menu Tool',params=Menu)
-async def menu_tool(index:int,labels:list[str],context:Context=None):
+async def menu_tool(x:int,y:int,labels:list[str],context:Context=None):
     '''To interact with an element having dropdown menu and select an option from it'''
-    _,handle=await context.get_element_by_index(index)
-    await handle.scroll_into_view_if_needed()
-    label=labels if len(labels)>1 else labels[0]
-    await handle.select_option(label=label)
-    return f'Opened context menu of element {index} and selected {label}'
+    page=await context.get_current_page()
+    script='([x, y]) => document.elementFromPoint(x, y)'
+    handle=await context.execute_script(page,script,[x,y],enable_handle=True)
+    labels=labels if len(labels)>1 else labels[0]
+    await handle.select_option(label=labels)
+    return f'Opened context menu of element at ({x},{y}) and selected {', '.join(labels)}'
 
 @Tool('Form Tool',params=Form)
 async def form_tool(tool_names:list[Literal['Click Tool','Type Tool','Upload Tool','Menu Tool']],tool_inputs:list[dict],context:Context=None):
