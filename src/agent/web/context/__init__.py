@@ -1,10 +1,12 @@
 from playwright.async_api import Page,Browser as PlaywrightBrowser, Frame,ElementHandle,BrowserContext as PlaywrightBrowserContext
 from src.agent.web.browser.config import BROWSER_ARGS,SECURITY_ARGS,IGNORE_DEFAULT_ARGS
 from src.agent.web.context.views import BrowserSession,BrowserState,Tab
+from src.agent.web.context.config import IGNORED_URL_PATTERNS
 from src.agent.web.context.config import ContextConfig
 from src.agent.web.dom.views import DOMElementNode
 from src.agent.web.browser import Browser
 from src.agent.web.dom import DOM
+from urllib.parse import urlparse
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -126,6 +128,26 @@ class Context:
         if enable_handle:
             return await obj.evaluate_handle(script,args)
         return await obj.evaluate(script,args)
+    
+    def is_ad_url(self,url:str)->bool:
+        netloc=urlparse(url).netloc
+        if not netloc:
+            return True
+        return any(netloc in pattern for pattern in IGNORED_URL_PATTERNS)
+    
+    async def is_frame_visible(self,frame:Frame)->bool:
+        if frame.is_detached() or self.is_ad_url(frame.url):
+            return False
+        frame_element=await frame.frame_element()
+        if frame_element is None: 
+            return False
+        bbox=await frame_element.bounding_box()
+        if bbox is None:
+            return False
+        area=bbox['width']*bbox['height']
+        if any([bbox.get('x')<0,bbox.get('y')<0,area<10]):
+            return False
+        return True
     
     async def get_screenshot(self,save_screenshot:bool=False,full_page:bool=False):
         page=await self.get_current_page()

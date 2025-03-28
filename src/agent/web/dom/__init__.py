@@ -1,6 +1,4 @@
 from src.agent.web.dom.views import DOMElementNode, DOMState, CenterCord, BoundingBox
-from src.agent.web.context.config import IGNORED_URL_PATTERNS
-from urllib.parse import urlparse
 from typing import TYPE_CHECKING
 from asyncio import sleep
 
@@ -19,29 +17,16 @@ class DOM:
             nodes=[]
             interactive_elements=[]
             page=await self.context.get_current_page()
-            await page.wait_for_load_state('domcontentloaded')
+            await page.wait_for_load_state('load')
             await self.context.execute_script(page,script)
-            await sleep(1.25)
-            elements=await self.context.execute_script(page,'getInteractiveElements()')
-            interactive_elements.extend(elements)
             frames=page.frames
-            # Delete the main frame
-            frames.pop(0) 
             try:
-                for frame in frames:
-                    frame_element = await frame.frame_element()
-                    bbox = await frame_element.bounding_box()
-                    netloc=urlparse(frame.url).netloc # Deletes the about:blank & data: urls
-                    if bbox is None or netloc=='':
+                for index,frame in enumerate(frames):
+                    #index=0 means Main Frame
+                    if index>0 and not await self.context.is_frame_visible(frame=frame):
                         continue
-                    # print(netloc,bbox)
-                    width,height=bbox['width'],bbox['height']
-                    is_ad_url=any(netloc in pattern for pattern in IGNORED_URL_PATTERNS)
-                    if (width<10 or height<10) or is_ad_url or frame.is_detached():
-                        continue
-                    await frame.wait_for_load_state('domcontentloaded')
+                    print(f"Getting elements from frame: {frame.url}")
                     await self.context.execute_script(frame,script)
-                    await sleep(1.25)
                     elements=await self.context.execute_script(frame,'getInteractiveElements()')
                     interactive_elements.extend(elements)
             except Exception as e:
@@ -66,7 +51,6 @@ class DOM:
                 nodes.append(node)
         except Exception as e:
             print(f"Failed to get elements from page: {page.url}\nError: {e}")
-            nodes=[]
             screenshot=None
         # print(nodes)
         return (screenshot,DOMState(nodes=nodes))

@@ -30,42 +30,34 @@ RELEVANT_CONTENT_TYPES = [
 ]
 
 IGNORED_URL_PATTERNS = [
-	# Analytics and tracking
 	'analytics',
 	'tracking',
 	'telemetry',
     'googletagmanager'
 	'beacon',
 	'metrics',
-	# Ad-related
 	'doubleclick',
 	'adsystem',
 	'adserver',
 	'advertising',
     'cdn.optimizely',
-	# Social media widgets
 	'facebook.com/plugins',
 	'platform.twitter',
 	'linkedin.com/embed',
-	# Live chat and support
 	'livechat',
 	'zendesk',
 	'intercom',
 	'crisp.chat',
 	'hotjar',
-	# Push notifications
 	'push-notifications',
 	'onesignal',
 	'pushwoosh',
-	# Background sync/heartbeat
 	'heartbeat',
 	'ping',
 	'alive',
-	# WebRTC and streaming
 	'webrtc',
 	'rtmp://',
 	'wss://',
-	# Common CDNs for dynamic content
 	'cloudfront.net',
 	'fastly.net'
 ]

@@ -24,20 +24,25 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         raise ValueError('Invalid mode. Use "copy" or "paste".')
 
 @Tool('Click Tool',params=Click)
-async def click_tool(x:int,y:int,context:Context=None):
+async def click_tool(x:int,y:int,mode:Literal['navigate','click']='navigate',context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
-    await page.wait_for_load_state('domcontentloaded') 
-    # await handle.check(force=True)
-    # return f'Checked element at index {index}'
-    await page.mouse.click(x=x,y=y)
-    return f'Clicked on the element at ({x},{y})'
+    if mode=='navigate':
+        async with page.expect_navigation():
+            await page.mouse.click(x=x,y=y)
+        current_url=page.url
+        return f'Clicked on the element at ({x},{y}) and navigated to {current_url}'
+    elif mode=='click':
+        await page.mouse.click(x=x,y=y)
+        return f'Clicked on the element at ({x},{y})'
+    else:
+        raise ValueError('Invalid mode. Use "navigate" or "click"')
 
 @Tool('Type Tool',params=Type)
 async def type_tool(x:int,y:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To fill input fields or search boxes'''
     page=await context.get_current_page()
-    await page.wait_for_load_state('domcontentloaded')
+    await page.wait_for_load_state('load')
     await page.mouse.click(x=x,y=y)
     if clear=='True':
         await page.keyboard.press('Control+A')
@@ -140,7 +145,7 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
         page=session.current_page
         await page.close()
         pages=session.context.pages
-        if tab_index is not None and tab_index>len(pages):
+        if tab_index is not None and tab_index+1>len(pages):
             raise IndexError('Index out of range')
         page=pages[-1]
         session.current_page=page
@@ -149,7 +154,7 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
         return f'Closed current tab and switched to previous tab'
     elif mode=='switch':
         pages=session.context.pages
-        if tab_index is not None and tab_index>len(pages):
+        if tab_index is not None and tab_index+1>len(pages):
             raise IndexError('Index out of range')
         page=pages[tab_index]
         session.current_page=page
