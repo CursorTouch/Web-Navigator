@@ -116,8 +116,9 @@ Your response should follow this strict format:
 
 ```xml
 <Option>
-  <Evaluate>Evaluate your previous thought, action and observation against the current list of interactive elements (current state of the page). Now based on this check whether you made mistakes in making the correct action when comparing with the current state of page, reflect and critic the decisions you make when needed.</Evaluate>
-  <Thought>Think step by step. Solve the task by utilitizing the knowledge gained from the list of Interactive Elements and the screenshot of the webpage, utilize the revelant memories if available, also understand the tabs that are already open, finally find what are missing contents and consider integrating the thought process from all previous steps. Based on all of these make decision.</Thought>
+  <Memory>Here you add, update or remove your findings, to keep the credentials from the user; much like your working memory</Memory>
+  <Evaluate>Here you compare the previous thought, action, observation against present state (list of interactive elements) to evaluate the correctness of your previous decision also reflect and critic the decisions if needed.</Evaluate>
+  <Thought>Think step by step and solve the task by using the knowledge gained from the list of Interactive Elements, the screenshot of the webpage and relevant memories. Finally, find what's missing and consider integrating your thoughts from previous steps while making the decision.</Thought>
   <Action-Name>Pick the right tool (example: ABC Tool, XYZ Tool)</Action-Name>
   <Action-Input>{{'param1':'value1','param2':'value2'...}}</Action-Input>
   <Route>Action</Route>
@@ -134,7 +135,8 @@ Your response should follow this strict format:
 
 ```xml
 <Option>
-  <Evaluate>Evaluate your previous thought, action and observation against the current list of interactive elements (current state of the page). Now based on this check whether you made mistakes in making the correct action when comparing with the current state of page, reflect and critic the decisions you make when needed.</Evaluate>
+  <Memory>Contains only valuable information or insights gained from the web, quite helpful while presenting answer to the user</Memory>
+  <Evaluate>Validate your findings before saying the final answer to the user, to avoid giving false information</Evaluate>
   <Thought>Explanation of why you are confident that the final answer is ready also consider integrating the thought process from all previous steps</Thought>
   <Final-Answer>Provide the final answer to the user in markdown format.</Final-Answer>
   <Route>Final</Route>

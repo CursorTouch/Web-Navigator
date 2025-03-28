@@ -54,10 +54,12 @@ class WebAgent(BaseAgent):
         ai_message=await self.llm.async_invoke(state.get('messages'))
         # print(ai_message.content)
         agent_data=extract_agent_data(ai_message.content)
+        memory=agent_data.get('Memory')
         evaluate=agent_data.get("Evaluate")
         thought=agent_data.get('Thought')
         route=agent_data.get('Route')
         if self.verbose:
+            print(colored(f'Memory: {memory}',color='light_blue',attrs=['bold']))
             print(colored(f'Evaluate: {evaluate}',color='light_yellow',attrs=['bold']))
             print(colored(f'Thought: {thought}',color='light_magenta',attrs=['bold']))
         return {**state,'agent_data': agent_data,'messages':[ai_message],'route':route}
@@ -65,6 +67,7 @@ class WebAgent(BaseAgent):
     async def action(self,state:AgentState):
         "Execute the provided action"
         agent_data=state.get('agent_data')
+        memory=agent_data.get('Memory')
         evaluate=agent_data.get("Evaluate")
         thought=agent_data.get('Thought')
         action_name=agent_data.get('Action Name')
@@ -90,6 +93,7 @@ class WebAgent(BaseAgent):
         # print(browser_state.dom_state.elements_to_string())
         # Redefining the AIMessage and adding the new observation
         action_prompt=self.action_prompt.format(**{
+            'memory':memory,
             'evaluate':evaluate,
             'thought':thought,
             'action_name':action_name,
@@ -116,13 +120,16 @@ class WebAgent(BaseAgent):
         if self.iteration<self.max_iteration:
             agent_data=state.get('agent_data')
             evaluate=agent_data.get("Evaluate")
+            memory=agent_data.get('Memory')
             thought=agent_data.get('Thought')
             final_answer=agent_data.get('Final Answer')
         else:
+            memory='I have reached the maximum iteration limit. Cannot procced further.'
             evaluate='I have reached the maximum iteration limit.'
             thought='Looks like I have reached the maximum iteration limit reached.',
             final_answer='Maximum Iteration reached.'
         answer_prompt=self.answer_prompt.format(**{
+            'memory':memory,
             'evaluate':evaluate,
             'thought':thought,
             'final_answer':final_answer

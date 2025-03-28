@@ -1,5 +1,6 @@
 ```xml
 <Option>
+    <Memory>{memory}</Memory>
     <Evaluate>{evaluate}</Evaluate>
     <Thought>{thought}</Thought>
     <Action-Name>{action_name}</Action-Name>

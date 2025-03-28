@@ -11,6 +11,10 @@ def extract_agent_data(text):
     result = {}
     # Check if it's Option 1 (Action-based)
     if re.search(r"<Route>Action</Route>", text):
+        # Extract Memory
+        evaluate_memory = re.search(r"<Memory>(.*?)<\/Memory>", text, re.DOTALL)
+        if evaluate_memory:
+            result['Memory'] = evaluate_memory.group(1).strip()
         # Extract Evaluate
         evaluate_match = re.search(r"<Evaluate>(.*?)<\/Evaluate>", text, re.DOTALL)
         if evaluate_match:
@@ -39,6 +43,11 @@ def extract_agent_data(text):
             result['Route'] = route_match.group(1).strip()
     # Check if it's Option 2 (Final Answer)
     elif re.search(r"<Route>Final</Route>", text):
+        # Extract Memory
+        evaluate_memory = re.search(r"<Memory>(.*?)<\/Memory>", text, re.DOTALL)
+        if evaluate_memory:
+            result['Memory'] = evaluate_memory.group(1).strip()
+        # Extract Evaluate
         evaluate_match = re.search(r"<Evaluate>(.*?)<\/Evaluate>", text, re.DOTALL)
         if evaluate_match:
             result['Evaluate'] = evaluate_match.group(1).strip()
