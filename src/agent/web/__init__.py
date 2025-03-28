@@ -59,7 +59,7 @@ class WebAgent(BaseAgent):
         thought=agent_data.get('Thought')
         route=agent_data.get('Route')
         if self.verbose:
-            print(colored(f'Memory: {memory}',color='light_blue',attrs=['bold']))
+            print(colored(f'Memory: {memory}',color='light_green',attrs=['bold']))
             print(colored(f'Evaluate: {evaluate}',color='light_yellow',attrs=['bold']))
             print(colored(f'Thought: {thought}',color='light_magenta',attrs=['bold']))
         return {**state,'agent_data': agent_data,'messages':[ai_message],'route':route}
@@ -72,7 +72,6 @@ class WebAgent(BaseAgent):
         thought=agent_data.get('Thought')
         action_name=agent_data.get('Action Name')
         action_input=agent_data.get('Action Input')
-        route=agent_data.get('Route')
         if self.verbose:
             print(colored(f'Action Name: {action_name}',color='blue',attrs=['bold']))
             print(colored(f'Action Input: {action_input}',color='blue',attrs=['bold']))
@@ -97,8 +96,7 @@ class WebAgent(BaseAgent):
             'evaluate':evaluate,
             'thought':thought,
             'action_name':action_name,
-            'action_input':json.dumps(action_input,indent=2),
-            'route':route
+            'action_input':json.dumps(action_input,indent=2)
         })
         observation_prompt=self.observation_prompt.format(**{
             'iteration':self.iteration,
@@ -111,7 +109,7 @@ class WebAgent(BaseAgent):
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
         return {**state,'agent_data':agent_data,'messages':messages,'prev_observation':observation}
 
-    def final(self,state:AgentState):
+    def answer(self,state:AgentState):
         "Give the final answer"
         state['messages'].pop() # Remove the last message for modification
         last_message=state['messages'][-1] # ImageMessage/HumanMessage
@@ -152,7 +150,7 @@ class WebAgent(BaseAgent):
             route=state.get('route')
             return route.lower()
         else:
-            return 'final'
+            return 'answer'
         
     def output_controller(self,state:AgentState):
         if self.structured_output:
@@ -165,13 +163,13 @@ class WebAgent(BaseAgent):
         graph=StateGraph(AgentState)
         graph.add_node('reason',self.reason)
         graph.add_node('action',self.action)
-        graph.add_node('final',self.final)
+        graph.add_node('answer',self.answer)
         graph.add_node('structured',self.structured)
 
         graph.add_edge(START,'reason')
         graph.add_conditional_edges('reason',self.main_controller)
         graph.add_edge('action','reason')
-        graph.add_conditional_edges('final',self.output_controller)
+        graph.add_conditional_edges('answer',self.output_controller)
         graph.add_edge('structured',END)
 
         return graph.compile(debug=False)

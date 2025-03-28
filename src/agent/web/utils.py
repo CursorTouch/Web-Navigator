@@ -42,7 +42,7 @@ def extract_agent_data(text):
         if route_match:
             result['Route'] = route_match.group(1).strip()
     # Check if it's Option 2 (Final Answer)
-    elif re.search(r"<Route>Final</Route>", text):
+    elif re.search(r"<Route>Answer</Route>", text):
         # Extract Memory
         evaluate_memory = re.search(r"<Memory>(.*?)<\/Memory>", text, re.DOTALL)
         if evaluate_memory:

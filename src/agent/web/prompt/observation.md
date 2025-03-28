@@ -12,4 +12,4 @@ Available Tabs:
 Interactive Elements:
 {interactive_elements}
 </Observation>
-```xml
+```
