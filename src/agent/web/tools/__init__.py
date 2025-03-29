@@ -24,19 +24,16 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         raise ValueError('Invalid mode. Use "copy" or "paste".')
 
 @Tool('Click Tool',params=Click)
-async def click_tool(x:int,y:int,mode:Literal['navigate','click']='navigate',context:Context=None):
+async def click_tool(x:int,y:int,context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
-    if mode=='navigate':
-        async with page.expect_navigation():
+    try:
+        async with page.expect_navigation(timeout=3*1000):
             await page.mouse.click(x=x,y=y)
-        current_url=page.url
-        return f'Clicked on the element at ({x},{y}) and navigated to {current_url}'
-    elif mode=='click':
-        await page.mouse.click(x=x,y=y)
+            current_url=page.url
+    except:
         return f'Clicked on the element at ({x},{y})'
-    else:
-        raise ValueError('Invalid mode. Use "navigate" or "click"')
+    return f'Clicked on the element at ({x},{y}) and navigated to {current_url}'
 
 @Tool('Type Tool',params=Type)
 async def type_tool(x:int,y:int,text:str,clear:Literal['True','False']='False',context:Context=None):
