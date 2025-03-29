@@ -12,7 +12,7 @@ class Clipboard(SharedBaseModel):
 class Click(SharedBaseModel):
     x:int = Field(...,description="the x coordinate of the element to click",examples=[0])
     y:int = Field(...,description="the y coordinate of the element to click",examples=[0])
-    mode:Literal['navigate','spawn','click',] = Field(description="navigates to url in same tab or navigates to url in a new tab otherwise just clicks in same tab.",examples=['navigate'],default='click')
+    mode:Literal['navigate','click'] = Field(description="navigate if link is present or just click",examples=['navigate'],default='navigate')
 
 class Type(SharedBaseModel):
     x:int = Field(...,description="the x coordinate of the element to type in",examples=[0])
