@@ -18,7 +18,6 @@ class DOM:
             interactive_elements=[]
             page=await self.context.get_current_page()
             await page.wait_for_load_state('load')
-            await self.context.execute_script(page,script)
             frames=page.frames
             try:
                 for index,frame in enumerate(frames):
@@ -36,6 +35,7 @@ class DOM:
                 await self.context.execute_script(page,'interactive_elements=>{mark_page(interactive_elements)}',interactive_elements)
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
+                # await sleep(5)
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None

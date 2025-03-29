@@ -10,9 +10,10 @@
     const INTERACTIVE_ROLES =new Set([
         'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
         'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'grid',
-        'option', 'progressbar', 'scrollbar', 'searchbox','listbox','listbox',
-        'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 'a-dropdown-button', 'click',
-        'menuitemcheckbox', 'menuitemradio', 'a-button-text', 'button-text', 'button-icon', 'button-icon-only', 
+        'option', 'progressbar', 'scrollbar', 'searchbox','listbox',
+        'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 
+        'a-dropdown-button', 'click','menuitemcheckbox', 'menuitemradio', 
+        'a-button-text', 'button-text', 'button-icon', 'button-icon-only',
         'button-text-icon-only', 'dropdown', 'combobox'
     ])
 
@@ -26,30 +27,19 @@
 
     const labels = [];
 
-    // Function to get a random color
-    function getRandomColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
-
-    // Function to wait for the page to be fully loaded
-    function waitForPageToLoad() {
-        return new Promise((resolve, reject) => {
-            if (document.readyState === 'complete') {
-                resolve();
-            } else {
-                window.addEventListener('load', resolve); // Resolves when the load event fires
-            }
-        });
-    }
-
     // Extract visible interactive elements`
-    async function getInteractiveElements(node=document.body,frame=null) {
-        const interactiveElements = [];  
+    async function getInteractiveElements(node=document.body) {
+        const interactiveElements = [];
+        // Function to wait for the page to be fully loaded
+        function waitForPageToLoad() {
+            return new Promise((resolve, reject) => {
+                if (document.readyState === 'complete') {
+                    resolve();
+                } else {
+                    window.addEventListener('load', resolve); // Resolves when the load event fires
+                }
+            });
+        }  
         await waitForPageToLoad();
 
         function isVisible(element) {
@@ -57,19 +47,19 @@
             // The radio and checkbox elements are all ready invisible so we can skip them
             if(new Set(['radio', 'checkbox']).has(type)) return true;
             const style = window.getComputedStyle(element);
-            const hasBoundingBox = element.offsetWidth > 0 && element.offsetHeight > 0;
+            const onScreen = element.offsetWidth > 0 && element.offsetHeight > 0;
             return style.display !== 'none' &&
             style.visibility !== 'hidden' &&
             style.opacity !== '0' && 
             !element.hasAttribute('hidden') &&
-            hasBoundingBox;
+            onScreen;
         }
 
         function isElementInViewport(element) {
             if (!element || element.offsetParent === null) {
                 return false; // Hidden elements (display: none)
             }
-        
+
             const rect = element.getBoundingClientRect();
             const style = window.getComputedStyle(element);
             const windowHeight = window.innerHeight || document.documentElement.clientHeight;
@@ -79,7 +69,6 @@
             if (style.position === "fixed") {
                 return rect.width > 0 && rect.height > 0;
             }
-        
             // Sticky elements: Check if they are visible inside their parent
             if (style.position === "sticky") {
                 const parent = element.offsetParent;
@@ -90,7 +79,6 @@
                     }
                 }
             }
-        
             // Check if any part of the element is inside the viewport
             return (
                 rect.bottom >= 0 &&
@@ -100,9 +88,10 @@
             );
         }
 
-        function isClickable(element) {
-            return element.hasAttribute('onclick') || element.hasAttribute('v-on:click') || element.hasAttribute('@click') || element.hasAttribute("ng-click") ||
-            element.getAttribute('role') === 'button' ||  CURSOR_TYPES.has(element.getAttribute('cursor'));
+        function isElementClickable(element) {
+            const style = window.getComputedStyle(element);
+            return CURSOR_TYPES.has(style.cursor)||element.hasAttribute('onclick') || element.hasAttribute('v-on:click') ||
+            element.hasAttribute('@click') || element.hasAttribute("ng-click")
         }
 
         function isElementCovered(element) {
@@ -113,16 +102,12 @@
             const boundingBox = element.getBoundingClientRect();
             const x = boundingBox.left + boundingBox.width / 2;
             const y = boundingBox.top + boundingBox.height / 2;
-        
             // Get the top element under the center of the current element
             const topElement = document.elementFromPoint(x, y);
-        
             // If no element is found at the point, return false (no element is covering it)
             if (!topElement) return false;
-        
             // Compare if topElement is inside the current element
             const isInside = element.contains(topElement);
-        
             // If topElement is inside the current element, it means it's not covered by it
             if (isInside) return false;        
             return true;  // If no coverage, return true
@@ -139,7 +124,7 @@
             const hasInteractiveTag = INTERACTIVE_TAGS.has(tagName);
             const hasInteractiveRole = role && INTERACTIVE_ROLES.has(role);
 
-            if ((hasInteractiveTag || hasInteractiveRole || isClickable(currentNode)) && isVisible(currentNode) && isElementInViewport(currentNode)) {
+            if ((hasInteractiveTag || hasInteractiveRole || isElementClickable(currentNode)) && isVisible(currentNode) && isElementInViewport(currentNode)) {
                 // Check if the element is covered by another element
                 const isCovered = !isElementCovered(currentNode);
                 if (isCovered) {
@@ -171,8 +156,7 @@
                         attributes: Object.fromEntries(
                             Array.from(currentNode.attributes)
                                 .filter(attr => SAFE_ATTRIBUTES.has(attr.name))
-                                .map(attr => [attr.name, attr.value])
-                        ),
+                                .map(attr => [attr.name, attr.value])),
                         box: boundingBox || null,  // Avoid undefined errors
                         center: { x, y }
                     });
@@ -183,8 +167,7 @@
             if(shadowRoot){
                 Array.from(shadowRoot.children).forEach(child => traverseDom(child));
             }
-            
-            if(!isClickable(currentNode)) {
+            if(!isElementClickable(currentNode)) {
                 currentNode.childNodes.forEach(child => traverseDom(child));
             }
         }
@@ -194,6 +177,16 @@
 
     // Mark page by placing bounding boxes and labels
     function mark_page(elements) {
+        // Function to generate a random color
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
         elements.forEach((element,index) => {
             const { box } = element;
             if (!box) return;
