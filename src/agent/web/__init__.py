@@ -60,8 +60,8 @@ class WebAgent(BaseAgent):
         thought=agent_data.get('Thought')
         route=agent_data.get('Route')
         if self.verbose:
-            print(colored(f'Memory: {memory}',color='light_green',attrs=['bold']))
             print(colored(f'Evaluate: {evaluate}',color='light_yellow',attrs=['bold']))
+            print(colored(f'Memory: {memory}',color='light_green',attrs=['bold']))
             print(colored(f'Thought: {thought}',color='light_magenta',attrs=['bold']))
         return {**state,'agent_data': agent_data,'messages':[ai_message],'route':route}
 

@@ -15,6 +15,7 @@ class DOM:
                 script=f.read()
         try:
             nodes=[]
+            selector_map={}
             interactive_elements=[]
             page=await self.context.get_current_page()
             await page.wait_for_load_state('load')
@@ -24,7 +25,7 @@ class DOM:
                     #index=0 means Main Frame
                     if index>0 and not await self.context.is_frame_visible(frame=frame):
                         continue
-                    print(f"Getting elements from frame: {frame.url}")
+                    # print(f"Getting elements from frame: {frame.url}")
                     await self.context.execute_script(frame,script)
                     elements=await self.context.execute_script(frame,'getInteractiveElements()')
                     interactive_elements.extend(elements)
@@ -39,7 +40,7 @@ class DOM:
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
-            for element in interactive_elements:
+            for label,element in enumerate(interactive_elements):
                 node=DOMElementNode(**{
                     'tag':element.get('tag'),
                     'role':element.get('role'),
@@ -48,10 +49,11 @@ class DOM:
                     'center':CenterCord(**element.get('center')),
                     'bounding_box':BoundingBox(**element.get('box')),
                 })
-                nodes.append(node)
+                selector_map.update({label:node})
+            nodes=list(selector_map.values())
         except Exception as e:
             print(f"Failed to get elements from page: {page.url}\nError: {e}")
             screenshot=None
         # print(nodes)
-        return (screenshot,DOMState(nodes=nodes))
+        return (screenshot,DOMState(nodes=nodes,selector_map=selector_map))
 

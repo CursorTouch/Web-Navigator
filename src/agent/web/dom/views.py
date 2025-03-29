@@ -43,6 +43,7 @@ class DOMElementNode:
 @dataclass
 class DOMState:
     nodes: list[DOMElementNode]=field(default_factory=list)
+    selector_map: dict[str,DOMElementNode]=field(default_factory=dict)
 
     def elements_to_string(self)->str:
         return '\n'.join([f'{index} - Tag: {node.tag} Role: {node.role} Name: {node.name} Attributes: {node.attributes} Cordinates: {node.center.to_string()}' for index,(node) in enumerate(self.nodes)])

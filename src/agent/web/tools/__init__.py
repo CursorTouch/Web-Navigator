@@ -24,28 +24,34 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         raise ValueError('Invalid mode. Use "copy" or "paste".')
 
 @Tool('Click Tool',params=Click)
-async def click_tool(x:int,y:int,context:Context=None):
+async def click_tool(index:int,context:Context=None):
     '''For clicking buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
-    try:
-        async with page.expect_navigation(timeout=3*1000):
+    element=await context.get_element_by_index(index=index)
+    cordinates=element.center.to_dict()
+    x,y=cordinates.get('x'),cordinates.get('y')
+    if element.attributes.get('href',''):
+        async with page.expect_navigation(timeout=5*1000):
             await page.mouse.click(x=x,y=y)
-            current_url=page.url
-    except:
-        return f'Clicked on the element at ({x},{y})'
-    return f'Clicked on the element at ({x},{y}) and navigated to {current_url}'
+        url=page.url
+        return f'Clicked on the element at label {index} and navigated to {url}'
+    await page.mouse.click(x=x,y=y)
+    return f'Clicked on the element at label {index}'
 
 @Tool('Type Tool',params=Type)
-async def type_tool(x:int,y:int,text:str,clear:Literal['True','False']='False',context:Context=None):
+async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To fill input fields or search boxes'''
     page=await context.get_current_page()
+    element=await context.get_element_by_index(index=index)
+    cordinates=element.center.to_dict()
+    x,y=cordinates.get('x'),cordinates.get('y')
     await page.wait_for_load_state('load')
     await page.mouse.click(x=x,y=y)
     if clear=='True':
         await page.keyboard.press('Control+A')
         await page.keyboard.press('Backspace')
     await page.keyboard.type(text,delay=80)
-    return f'Typed {text} in element at ({x},{y})'
+    return f'Typed {text} in element at label {index}'
 
 @Tool('Wait Tool',params=Wait)
 async def wait_tool(time:int,context:Context=None):
@@ -98,8 +104,12 @@ async def key_tool(keys:str,times:int=1,context:Context=None):
     return f'Pressed {keys}'
 
 @Tool('Download Tool',params=Download)
-async def download_tool(x:int,y:int,url:str=None,filename:str=None,context:Context=None):
+async def download_tool(index:int,url:str=None,filename:str=None,context:Context=None):
     '''To download a file (e.g., pdf, image, video, audio) to the system'''
+    page=await context.get_current_page()
+    element=await context.get_element_by_index(index=index)
+    cordinates=element.center.to_dict()
+    x,y=cordinates.get('x'),cordinates.get('y')
     folder_path=Path(context.browser.config.downloads_dir)
     try:
         page=await context.get_current_page()
@@ -160,8 +170,11 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
         raise ValueError('Invalid mode')
     
 @Tool('Upload Tool',params=Upload)   
-async def upload_tool(x:int,y:int,filenames:list[str],context:Context=None):
-    '''To upload a file to the webpage'''
+async def upload_tool(index:int,filenames:list[str],context:Context=None):
+    '''To upload files to the webpage'''
+    element=await context.get_element_by_index(index=index)
+    cordinates=element.center.to_dict()
+    x,y=cordinates.get('x'),cordinates.get('y')
     files=[Path(getcwd()).joinpath('./uploads',filename) for filename in filenames]
     page=await context.get_current_page()
     async with page.expect_file_chooser() as file_chooser_info:
@@ -173,13 +186,16 @@ async def upload_tool(x:int,y:int,filenames:list[str],context:Context=None):
     else:
         await handle.set_input_files(files=files[0])
     await page.wait_for_load_state('load')
-    return f'Uploaded {filenames} to element at ({x},{y})'
+    return f'Uploaded {filenames} to element at label {index}'
 
 
 @Tool('Menu Tool',params=Menu)
-async def menu_tool(x:int,y:int,labels:list[str],context:Context=None):
+async def menu_tool(index:int,labels:list[str],context:Context=None):
     '''To interact with an element having dropdown menu and select an option from it'''
     page=await context.get_current_page()
+    element=await context.get_element_by_index(index=index)
+    cordinates=element.center.to_dict()
+    x,y=cordinates.get('x'),cordinates.get('y')
     script='([x, y]) => document.elementFromPoint(x, y)'
     handle=await context.execute_script(page,script,[x,y],enable_handle=True)
     labels=labels if len(labels)>1 else labels[0]

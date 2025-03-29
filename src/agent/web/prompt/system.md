@@ -83,6 +83,7 @@ Label: <element_index> - Tag: <element_tag> Role: <element_role> Name: <element_
 - Handle separate, isolated tasks in individual tabs, solving them one at a time.
 - Start with the default single tab when launching the browser and manage tabs efficiently.
 - Reuse existing unused tabs before opening new ones to optimize organization and reduce clutter.
+- Don't close the current tab if it is the only tab that is open.
 
 ### EPISODIC MEMORY:
 - Retains past experiences related to similar tasks, allowing for learning and adaptation.
@@ -119,9 +120,9 @@ Your response should follow this strict format:
 
 ```xml
 <Option>
-  <Memory>Here you add, modify or remove your findings, to store the credentials and preferences of the user and use them when needed; think of this section as your working memory</Memory>
   <Evaluate>Here you compare the previous thought, action, observation against present state (list of interactive elements) to evaluate the correctness of your previous decision also reflect and critic the decisions if needed.</Evaluate>
-  <Thought>Think step by step and solve the task by using the knowledge gained from the list of Interactive Elements, the screenshot of the webpage and relevant memories. Finally, find what's missing and consider integrating your thoughts from previous steps while making the decision.</Thought>
+  <Memory>Here you add, modify or remove your findings, to store the credentials and preferences of the user and use them when needed; think of this section as your working memory</Memory>
+  <Thought>Think step by step and solve the task by using the list of Interactive Elements, the screenshot of the webpage and relevant memories</Thought>
   <Action-Name>Pick the right tool (example: ABC Tool, XYZ Tool)</Action-Name>
   <Action-Input>{{'param1':'value1','param2':'value2'...}}</Action-Input>
   <Route>Action</Route>
@@ -138,8 +139,8 @@ Your response should follow this strict format:
 
 ```xml
 <Option>
-  <Memory>Contains only valuable information or insights gained from the web, quite helpful while presenting answer to the user</Memory>
   <Evaluate>Validate your findings before saying the final answer to the user, to avoid giving false information</Evaluate>
+  <Memory>Contains only valuable information or insights gained from the web, quite helpful while presenting answer to the user</Memory>
   <Thought>Explanation of why you are confident that the final answer is ready also consider integrating the thought process from all previous steps</Thought>
   <Final-Answer>Provide the final answer to the user in markdown format.</Final-Answer>
   <Route>Answer</Route>

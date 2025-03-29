@@ -10,12 +10,10 @@ class Clipboard(SharedBaseModel):
     text:str = Field(...,description="the text to copy to clipboard",examples=["hello world"])
 
 class Click(SharedBaseModel):
-    x:int = Field(...,description="the x coordinate of the element to click",examples=[0])
-    y:int = Field(...,description="the y coordinate of the element to click",examples=[0])
+    index:int = Field(...,description="the index of the element to click",examples=[0])
 
 class Type(SharedBaseModel):
-    x:int = Field(...,description="the x coordinate of the element to type in",examples=[0])
-    y:int = Field(...,description="the y coordinate of the element to type in",examples=[0])
+    index:int = Field(...,description="the index of the element to type in",examples=[0])
     text:str = Field(...,description="the text to type",examples=["hello world"])
     clear:Literal['True','False']=Field(description="whether to clear the text before typing",default="False",examples=['True'])
 
@@ -37,8 +35,7 @@ class Key(SharedBaseModel):
     times:int = Field(description="the number of times to press the key or combination of keys",examples=[2],default=1)
 
 class Download(SharedBaseModel):
-    x:int = Field(...,description="the x coordinate of the element to download",examples=[0])
-    y:int = Field(...,description="the y coordinate of the element to download",examples=[0])
+    index:int = Field(...,description="the index of the element to download",examples=[0])
     url:str = Field(...,description="url of the file to download",examples=["https://www.example.com/file.txt","https://abc.org/pdf/54655"])
     filename:str=Field(...,description="the name of the file to download",examples=["file.txt","xy4rs.pdf"])
 
@@ -50,13 +47,11 @@ class Tab(SharedBaseModel):
     tab_index:int = Field(description="mention the index of the exisiting tab to switch, if mode is switch",examples=[0],default=None)
 
 class Upload(SharedBaseModel):
-    x:int = Field(...,description="the x coordinate of the element to upload",examples=[0])
-    y:int = Field(...,description="the y coordinate of the element to upload",examples=[0])
+    index:int = Field(...,description="the index of the element to upload file to",examples=[0])
     filenames:list[str] = Field(...,description="list of filenames of the files to upload",examples=[["file.txt"]])
 
 class Menu(SharedBaseModel):
-    x:int = Field(...,description="the x coordinate of the element to open context menu",examples=[0])
-    y:int = Field(...,description="the y coordinate of the element to open context menu",examples=[0])
+    index:int = Field(...,description="the index of the element to select from the dropdown menu",examples=[0])
     labels:list[str] = Field(...,description="list of labels to select from the dropdown menu",examples=["BMW"])
 
 class Form(SharedBaseModel):

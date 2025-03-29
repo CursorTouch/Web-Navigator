@@ -122,7 +122,17 @@ class Context:
         session=await self.get_session()
         pages=session.context.pages
         return [Tab(index+1,page.url,await page.title()) for index,page in enumerate(pages)]
-
+    
+    async def get_selector_map(self)->dict[int,DOMElementNode]:
+        session=await self.get_session()
+        return session.state.dom_state.selector_map
+    
+    async def get_element_by_index(self,index:int)->DOMElementNode:
+        selector_map=await self.get_selector_map()
+        if index not in selector_map.keys():
+            raise Exception('Index not found')
+        element=selector_map.get(index)
+        return element
     
     async def execute_script(self,obj:Frame|Page,script:str,args:list=None,enable_handle:bool=False):
         if enable_handle:
