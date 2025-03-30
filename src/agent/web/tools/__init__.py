@@ -31,7 +31,7 @@ async def click_tool(index:int,context:Context=None):
     cordinates=element.center.to_dict()
     x,y=cordinates.get('x'),cordinates.get('y')
     if element.attributes.get('href',''):
-        async with page.expect_navigation(timeout=5*1000):
+        async with page.expect_navigation(timeout=4*1000) as navigation_info:
             await page.mouse.click(x=x,y=y)
         url=page.url
         return f'Clicked on the element at label {index} and navigated to {url}'

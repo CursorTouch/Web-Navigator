@@ -1,6 +1,7 @@
     const INTERACTIVE_TAGS =new Set([
         'a', 'button', 'details', 'embed', 'input','option','canvas',
-        'menu', 'menuitem', 'object', 'select', 'textarea', 'summary'
+        'menu', 'menuitem', 'object', 'select', 'textarea', 'summary',
+        'dialog', 'banner'
     ])
 
     const EXCLUDED_TAGS =new Set([
@@ -152,13 +153,14 @@
                               currentNode.getAttribute('name') ||
                               currentNode.getAttribute('aria-labelledby') ||
                               currentNode.getAttribute('aria-describedby') ||
-                              currentNode.textContent?.replace(/\s+/g, ' ').trim().split('.')[0] || null, // Trim textContent if it exists
+                              currentNode.textContent?.replace(/\s+/g, ' ').trim().split('.')[0] || 'none', // Trim textContent if it exists
                         attributes: Object.fromEntries(
                             Array.from(currentNode.attributes)
                                 .filter(attr => SAFE_ATTRIBUTES.has(attr.name))
                                 .map(attr => [attr.name, attr.value])),
                         box: boundingBox || null,  // Avoid undefined errors
-                        center: { x, y }
+                        center: { x, y },
+                        root: frame?'iframe':'document'
                     });
                 }
             }
@@ -168,7 +170,7 @@
                 Array.from(shadowRoot.children).forEach(child => traverseDom(child));
             }
             if(!isElementClickable(currentNode)) {
-                currentNode.childNodes.forEach(child => traverseDom(child));
+                Array.from(currentNode.children).forEach(child => traverseDom(child));
             }
         }
         traverseDom(node);

@@ -1,7 +1,7 @@
 ```xml
 <Option>
-    <Memory>{memory}</Memory>
     <Evaluate>{evaluate}</Evaluate>
+    <Memory>{memory}</Memory>
     <Thought>{thought}</Thought>
     <Action-Name>{action_name}</Action-Name>
     <Action-Input>{action_input}</Action-Input>

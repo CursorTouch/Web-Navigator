@@ -40,7 +40,7 @@ class DOM:
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
-            for label,element in enumerate(interactive_elements):
+            for element in interactive_elements:
                 node=DOMElementNode(**{
                     'tag':element.get('tag'),
                     'role':element.get('role'),
@@ -49,11 +49,11 @@ class DOM:
                     'center':CenterCord(**element.get('center')),
                     'bounding_box':BoundingBox(**element.get('box')),
                 })
-                selector_map.update({label:node})
-            nodes=list(selector_map.values())
+                nodes.append(node)
         except Exception as e:
             print(f"Failed to get elements from page: {page.url}\nError: {e}")
+            nodes=[]
             screenshot=None
-        # print(nodes)
+        selector_map=dict(enumerate(nodes))
         return (screenshot,DOMState(nodes=nodes,selector_map=selector_map))
 
