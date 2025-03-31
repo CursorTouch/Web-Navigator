@@ -212,7 +212,11 @@ class WebAgent(BaseAgent):
     def invoke(self, input: str,structured_output:BaseModel=None)->str|BaseModel:
         if self.verbose:
             print(f'Entering '+colored(self.name,'black','on_white'))
-        output=asyncio.run(self.async_invoke(input=input,structured_output=structured_output))       
+        try:
+            loop=asyncio.get_event_loop()
+            output=loop.run_until_complete(self.async_invoke(input=input))
+        except RuntimeError as e:
+            output=asyncio.run(self.async_invoke(input=input))
         return output
     
     async def close(self):

@@ -48,6 +48,7 @@ class DOM:
                     'attributes':element.get('attributes'),
                     'center':CenterCord(**element.get('center')),
                     'bounding_box':BoundingBox(**element.get('box')),
+                    'root':element.get('root')
                 })
                 nodes.append(node)
         except Exception as e:
