@@ -43,6 +43,27 @@
         }  
         await waitForPageToLoad();
 
+        function getXPath(element) {
+            if (!element || element.nodeType !== Node.ELEMENT_NODE) return "";
+            let parts = [];
+            while (element && element.nodeType === Node.ELEMENT_NODE) {
+                let index = 1;
+                let sibling = element.previousElementSibling;
+                // Count preceding siblings of the same tag type
+                while (sibling) {
+                    if (sibling.tagName === element.tagName) {
+                        index++;
+                    }
+                    sibling = sibling.previousElementSibling;
+                }
+                let tagName = element.tagName.toLowerCase();
+                let part = index > 1 ? `${tagName}[${index}]` : tagName;
+                parts.unshift(part);
+                element = element.parentNode;
+            }
+            return "/" + parts.join("/");
+        }
+
         function isVisible(element) {
             let type = element.getAttribute('type');
             // The radio and checkbox elements are all ready invisible so we can skip them
@@ -125,7 +146,7 @@
             const hasInteractiveTag = INTERACTIVE_TAGS.has(tagName);
             const hasInteractiveRole = role && INTERACTIVE_ROLES.has(role);
 
-            if ((hasInteractiveTag || hasInteractiveRole || isElementClickable(currentNode)) && isVisible(currentNode) && isElementInViewport(currentNode)) {
+            if ((hasInteractiveTag || hasInteractiveRole) || (isElementClickable(currentNode) && isVisible(currentNode) && isElementInViewport(currentNode))) {
                 // Check if the element is covered by another element
                 const isCovered = !isElementCovered(currentNode);
                 if (isCovered) {
@@ -136,7 +157,7 @@
                     let height = rect.height;
                     let frame = window.frameElement;
                     // If the element is in an iframe, adjust the coordinates
-                    while (frame) {
+                    while (frame!=null) {
                         let frameRect = frame.getBoundingClientRect();
                         left += frameRect.left;
                         top += frameRect.top;
@@ -145,7 +166,8 @@
                     const boundingBox = { left, top, width, height };
                     const x = Math.floor(boundingBox.left + boundingBox.width / 2);
                     const y = Math.floor(boundingBox.top + boundingBox.height / 2);
-                    
+                    const xpath=getXPath(currentNode)
+
                     interactiveElements.push({
                         tag: currentNode.tagName.toLowerCase(),
                         role: currentNode.getAttribute('role') || 'none',  // Default to 'none' if no role is found
@@ -160,7 +182,7 @@
                                 .map(attr => [attr.name, attr.value])),
                         box: boundingBox || null,  // Avoid undefined errors
                         center: { x, y },
-                        root: frame?'iframe':'document'
+                        xpath: xpath
                     });
                 }
             }

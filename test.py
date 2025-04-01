@@ -13,15 +13,19 @@ user_data_dir=os.environ.get('USER_DATA_DIR')
 downloads_dir=os.environ.get('DOWNLOADS_DIR')
 
 async def main():
-    browser=Browser(config=BrowserConfig(headless=False,browser='chrome',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=None))
+    browser=Browser(config=BrowserConfig(headless=False,browser='chrome',browser_instance_dir=browser_instance_dir,user_data_dir=None,downloads_dir=None))
     context=Context(browser=browser)
     await context.init_session()
     page=await context.get_current_page()
     dom=DOM(context=context)
-    await goto_tool.async_invoke(url='https://www.google.com/travel/flights?gl=IN&hl=en',context=context)
+    await goto_tool.async_invoke(url='https://google.com',context=context)
     sleep(5)
     screenshot,dom_state=await dom.get_state(use_vision=True)
-    print(dom_state.elements_to_string())
+    print(dom_state.nodes)
+    for i,node in enumerate(dom_state.nodes):
+        element_xpath=node.xpath
+        element=await page.query_selector(f'xpath={element_xpath}')
+        print(i,await element.text_content())
     await context.close_session()
     await browser.close_browser()
 

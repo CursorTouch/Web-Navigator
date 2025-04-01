@@ -36,7 +36,7 @@ class DOM:
                 await self.context.execute_script(page,'interactive_elements=>{mark_page(interactive_elements)}',interactive_elements)
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
-                # await sleep(5)
+                await sleep(2)
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
@@ -48,7 +48,7 @@ class DOM:
                     'attributes':element.get('attributes'),
                     'center':CenterCord(**element.get('center')),
                     'bounding_box':BoundingBox(**element.get('box')),
-                    'root':element.get('root')
+                    'xpath':element.get('xpath')
                 })
                 nodes.append(node)
         except Exception as e:

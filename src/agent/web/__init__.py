@@ -4,9 +4,9 @@ from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
 from src.agent.web.context import Context,ContextConfig
 from langgraph.graph import StateGraph,END,START
-from src.agent.web.registry import Registry
 from src.agent.web.state import AgentState
 from src.inference import BaseInference
+from src.tool.registry import Registry
 from src.memory import BaseMemory
 from src.agent import BaseAgent
 from pydantic import BaseModel
@@ -76,7 +76,7 @@ class WebAgent(BaseAgent):
         if self.verbose:
             print(colored(f'Action Name: {action_name}',color='blue',attrs=['bold']))
             print(colored(f'Action Input: {action_input}',color='blue',attrs=['bold']))
-        action_result=await self.registry.execute(action_name,action_input,self.context)
+        action_result=await self.registry.async_execute(action_name,action_input,context=self.context)
         observation=action_result.content
         if self.verbose:
             print(colored(f'Observation: {observation}',color='green',attrs=['bold']))
@@ -178,12 +178,12 @@ class WebAgent(BaseAgent):
     async def async_invoke(self, input: str, structured_output:BaseModel=None)->str|BaseModel:
         self.iteration=0
         self.structured_output=structured_output
-        actions_prompt=self.registry.actions_prompt()
+        tools_prompt=self.registry.tools_prompt()
         current_datetime=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         system_prompt=self.system_prompt.format(**{
             'instructions':self.instructions,
             'current_datetime':current_datetime,
-            'actions_prompt':actions_prompt,
+            'tools_prompt':tools_prompt,
             'max_iteration':self.max_iteration,
             'os':platform.system(),
             'browser':self.browser.config.browser.capitalize(),

@@ -23,7 +23,7 @@ You are a highly advanced, expert-level Web Agent with the capability to interac
 ## Available Tools:
 Use the following tools for interacting and extracting information from the webpage. The tools are used to perform actions.
 
-{actions_prompt}
+{tools_prompt}
 
 **NOTE:** Don't hallucinate actions.
 

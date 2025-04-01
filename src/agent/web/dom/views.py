@@ -31,11 +31,11 @@ class DOMElementNode:
     name: str
     bounding_box: BoundingBox
     center: CenterCord
+    xpath: str
     attributes: dict[str,str] = field(default_factory=dict)
-    root:str=field(default_factory=str)
 
     def __repr__(self):
-        return f"DOMElementNode(tag='{self.tag}', role='{self.role}', name='{self.name}', attributes={self.attributes}, cordinates={self.center}, bounding_box={self.bounding_box}, root={self.root})"
+        return f"DOMElementNode(tag='{self.tag}', role='{self.role}', name='{self.name}', attributes={self.attributes}, cordinates={self.center}, bounding_box={self.bounding_box}, xpath='{self.xpath}')"
     
     def to_dict(self)->dict[str,str]:
         return {'tag':self.tag,'role':self.role,'name':self.name,'bounding_box':self.bounding_box.to_dict(),'attributes':self.attributes, 'cordinates':self.center.to_dict()}

@@ -172,3 +172,7 @@ class Context:
         await page.wait_for_timeout(2*1000)
         screenshot=await page.screenshot(path=path,full_page=full_page,animations='disabled',type='jpeg')
         return screenshot
+    
+    async def is_page_blank(self):
+        page=await self.get_current_page()
+        return page.url=='about:blank'
