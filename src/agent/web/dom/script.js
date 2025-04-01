@@ -5,7 +5,7 @@
     ])
 
     const EXCLUDED_TAGS =new Set([
-        'style', 'script', 'noscript'
+        'style', 'script', 'noscript','link','meta'
     ])
 
     const INTERACTIVE_ROLES =new Set([

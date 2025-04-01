@@ -25,7 +25,7 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
 
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
-    '''For clicking buttons, links, checkboxes, and radio buttons'''
+    '''To click on elements such as buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
     cordinates=element.center.to_dict()
@@ -40,7 +40,7 @@ async def click_tool(index:int,context:Context=None):
 
 @Tool('Type Tool',params=Type)
 async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
-    '''To fill input fields or search boxes'''
+    '''To type text into input fields, search boxes'''
     page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
     cordinates=element.center.to_dict()
@@ -88,7 +88,7 @@ async def goto_tool(url:str,context:Context=None):
 
 @Tool('Back Tool',params=Back)
 async def back_tool(context:Context=None):
-    '''To return to the previous page'''
+    '''Go back to the previous page'''
     page=await context.get_current_page()
     await page.go_back()
     await page.wait_for_load_state('load')
@@ -171,7 +171,7 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
     
 @Tool('Upload Tool',params=Upload)   
 async def upload_tool(index:int,filenames:list[str],context:Context=None):
-    '''To upload files to the webpage'''
+    '''To upload files to an element in the webpage'''
     element=await context.get_element_by_index(index=index)
     cordinates=element.center.to_dict()
     x,y=cordinates.get('x'),cordinates.get('y')

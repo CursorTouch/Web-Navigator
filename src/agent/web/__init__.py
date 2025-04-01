@@ -123,8 +123,8 @@ class WebAgent(BaseAgent):
             thought=agent_data.get('Thought')
             final_answer=agent_data.get('Final Answer')
         else:
-            memory='I have reached the maximum iteration limit. Cannot procced further.'
             evaluate='I have reached the maximum iteration limit.'
+            memory='I have reached the maximum iteration limit. Cannot procced further.'
             thought='Looks like I have reached the maximum iteration limit reached.',
             final_answer='Maximum Iteration reached.'
         answer_prompt=self.answer_prompt.format(**{
