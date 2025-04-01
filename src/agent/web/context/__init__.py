@@ -136,12 +136,11 @@ class Context:
     
     async def get_handle_by_xpath(self,xpath:dict[str,str])->ElementHandle:
         page=await self.get_current_page()
-        frame_xpath=xpath.get('frame')
-        element_xpath=xpath.get('element')
-        if frame_xpath:
+        frame_xpath,element_xpath=xpath.values()
+        if frame_xpath: # handle elements from iframe
             frame=page.frame_locator(f'xpath={frame_xpath}')
             element=await frame.locator(f'xpath={element_xpath}').element_handle()
-        else:
+        else: #handle elements from main frame
             element=await page.locator(f'xpath={element_xpath}').element_handle()
         return element
 

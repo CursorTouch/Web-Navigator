@@ -48,8 +48,8 @@ class DOM:
                 print(f"Failed to get elements from frame: {frame.url}\nError: {e}")
             if use_vision:
                 # Add bounding boxes to the interactive elements
-                elements=[node.bounding_box.to_dict() for node in nodes]
-                await self.context.execute_script(page,'elements=>{mark_page(elements)}',elements)
+                elements=map(lambda node:node.bounding_box.to_dict(),nodes)
+                await self.context.execute_script(page,'elements=>{mark_page(elements)}',list(elements))
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
                 await sleep(2)
