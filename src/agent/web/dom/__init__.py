@@ -11,12 +11,11 @@ class DOM:
 
     async def get_state(self,use_vision:bool=False)->tuple[str|None,DOMState]:
         '''Get the state of the webpage.'''
-        with open('./src/agent/web/dom/script.js') as f:
-                script=f.read()
         try:
-            nodes=[]
+            nodes:list[DOMElementNode]=[]
             selector_map={}
-            interactive_elements=[]
+            with open('./src/agent/web/dom/script.js') as f:
+                script=f.read()
             page=await self.context.get_current_page()
             await page.wait_for_load_state('load')
             frames=page.frames
@@ -28,29 +27,35 @@ class DOM:
                     # print(f"Getting elements from frame: {frame.url}")
                     await self.context.execute_script(frame,script)
                     elements=await self.context.execute_script(frame,'getInteractiveElements()')
-                    interactive_elements.extend(elements)
+                    if index>0:
+                        frame_element =await frame.frame_element()
+                        frame_xpath=await self.context.execute_script(page,'(frame_element)=>getXPath(frame_element)',frame_element)
+                    else:
+                        frame_xpath=''
+                    for element in elements:
+                        element_xpath=element.get('xpath')
+                        node=DOMElementNode(**{
+                            'tag':element.get('tag'),
+                            'role':element.get('role'),
+                            'name':element.get('name'),
+                            'attributes':element.get('attributes'),
+                            'center':CenterCord(**element.get('center')),
+                            'bounding_box':BoundingBox(**element.get('box')),
+                            'xpath':{'frame':frame_xpath,'element':element_xpath}
+                        })
+                        nodes.append(node)
             except Exception as e:
                 print(f"Failed to get elements from frame: {frame.url}\nError: {e}")
             if use_vision:
                 # Add bounding boxes to the interactive elements
-                await self.context.execute_script(page,'interactive_elements=>{mark_page(interactive_elements)}',interactive_elements)
+                elements=[node.bounding_box.to_dict() for node in nodes]
+                await self.context.execute_script(page,'elements=>{mark_page(elements)}',elements)
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
                 await sleep(2)
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
-            for element in interactive_elements:
-                node=DOMElementNode(**{
-                    'tag':element.get('tag'),
-                    'role':element.get('role'),
-                    'name':element.get('name'),
-                    'attributes':element.get('attributes'),
-                    'center':CenterCord(**element.get('center')),
-                    'bounding_box':BoundingBox(**element.get('box')),
-                    'xpath':element.get('xpath')
-                })
-                nodes.append(node)
         except Exception as e:
             print(f"Failed to get elements from page: {page.url}\nError: {e}")
             nodes=[]

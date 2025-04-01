@@ -134,6 +134,17 @@ class Context:
         element=selector_map.get(index)
         return element
     
+    async def get_handle_by_xpath(self,xpath:dict[str,str])->ElementHandle:
+        page=await self.get_current_page()
+        frame_xpath=xpath.get('frame')
+        element_xpath=xpath.get('element')
+        if frame_xpath:
+            frame=page.frame_locator(f'xpath={frame_xpath}')
+            element=await frame.locator(f'xpath={element_xpath}').element_handle()
+        else:
+            element=await page.locator(f'xpath={element_xpath}').element_handle()
+        return element
+
     async def execute_script(self,obj:Frame|Page,script:str,args:list=None,enable_handle:bool=False):
         if enable_handle:
             handle=await obj.evaluate_handle(script,args)

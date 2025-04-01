@@ -1,5 +1,4 @@
 from dataclasses import dataclass,field
-
 @dataclass
 class BoundingBox:
     left:int
@@ -31,8 +30,8 @@ class DOMElementNode:
     name: str
     bounding_box: BoundingBox
     center: CenterCord
-    xpath: str
     attributes: dict[str,str] = field(default_factory=dict)
+    xpath: dict[str,str]=field(default_factory=dict)
 
     def __repr__(self):
         return f"DOMElementNode(tag='{self.tag}', role='{self.role}', name='{self.name}', attributes={self.attributes}, cordinates={self.center}, bounding_box={self.bounding_box}, xpath='{self.xpath}')"

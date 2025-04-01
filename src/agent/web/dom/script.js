@@ -28,6 +28,27 @@
 
     const labels = [];
 
+    function getXPath(element) {
+        if (!element || element.nodeType !== Node.ELEMENT_NODE) return "";
+        let parts = [];
+        while (element && element.nodeType === Node.ELEMENT_NODE) {
+            let index = 1;
+            let sibling = element.previousElementSibling;
+            // Count preceding siblings of the same tag type
+            while (sibling) {
+                if (sibling.tagName === element.tagName) {
+                    index++;
+                }
+                sibling = sibling.previousElementSibling;
+            }
+            let tagName = element.tagName.toLowerCase();
+            let part = `${tagName}[${index}]`;
+            parts.unshift(part);
+            element = element.parentNode;
+        }
+        return "/" + parts.join("/");
+    }
+
     // Extract visible interactive elements`
     async function getInteractiveElements(node=document.body) {
         const interactiveElements = [];
@@ -42,27 +63,6 @@
             });
         }  
         await waitForPageToLoad();
-
-        function getXPath(element) {
-            if (!element || element.nodeType !== Node.ELEMENT_NODE) return "";
-            let parts = [];
-            while (element && element.nodeType === Node.ELEMENT_NODE) {
-                let index = 1;
-                let sibling = element.previousElementSibling;
-                // Count preceding siblings of the same tag type
-                while (sibling) {
-                    if (sibling.tagName === element.tagName) {
-                        index++;
-                    }
-                    sibling = sibling.previousElementSibling;
-                }
-                let tagName = element.tagName.toLowerCase();
-                let part = index > 1 ? `${tagName}[${index}]` : tagName;
-                parts.unshift(part);
-                element = element.parentNode;
-            }
-            return "/" + parts.join("/");
-        }
 
         function isVisible(element) {
             let type = element.getAttribute('type');
@@ -212,10 +212,7 @@
         }
 
         elements.forEach((element,index) => {
-            const { box } = element;
-            if (!box) return;
-
-            const { left, top, width, height } = box;
+            const { left, top, width, height } = element;
             const color = getRandomColor();
 
             // Create bounding box

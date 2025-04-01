@@ -26,31 +26,25 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
     '''To click on elements such as buttons, links, checkboxes, and radio buttons'''
-    page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
-    cordinates=element.center.to_dict()
-    x,y=cordinates.get('x'),cordinates.get('y')
-    if element.attributes.get('href',''):
-        async with page.expect_navigation(timeout=4*1000) as navigation_info:
-            await page.mouse.click(x=x,y=y)
-        url=page.url
-        return f'Clicked on the element at label {index} and navigated to {url}'
-    await page.mouse.click(x=x,y=y)
+    element_handle=await context.get_handle_by_xpath(element.xpath)
+    if element.attributes.get('type')in ['checkbox','radio']:
+        await element_handle.check(force=True)
+        return f'Checked the element at label {index}'
+    await element_handle.click()
     return f'Clicked on the element at label {index}'
 
 @Tool('Type Tool',params=Type)
 async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To type text into input fields, search boxes'''
-    page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
-    cordinates=element.center.to_dict()
-    x,y=cordinates.get('x'),cordinates.get('y')
+    handle=await context.get_handle_by_xpath(element.xpath)
+    page=await context.get_current_page()
     await page.wait_for_load_state('load')
-    await page.mouse.click(x=x,y=y)
     if clear=='True':
-        await page.keyboard.press('Control+A')
-        await page.keyboard.press('Backspace')
-    await page.keyboard.type(text,delay=80)
+        await handle.press('Control+A')
+        await handle.press('Backspace')
+    await handle.type(text,delay=80)
     return f'Typed {text} in element at label {index}'
 
 @Tool('Wait Tool',params=Wait)
@@ -108,13 +102,12 @@ async def download_tool(index:int,url:str=None,filename:str=None,context:Context
     '''To download a file (e.g., pdf, image, video, audio) to the system'''
     page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
-    cordinates=element.center.to_dict()
-    x,y=cordinates.get('x'),cordinates.get('y')
+    handle=await context.get_handle_by_xpath(element.xpath)
     folder_path=Path(context.browser.config.downloads_dir)
     try:
         page=await context.get_current_page()
         async with page.expect_download(timeout=5*1000) as download_info:
-            await page.mouse.click(x=x,y=y)
+            await handle.click()
         download=await download_info.value
         if filename is None:
             filename=download.suggested_filename
@@ -173,12 +166,11 @@ async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]
 async def upload_tool(index:int,filenames:list[str],context:Context=None):
     '''To upload files to an element in the webpage'''
     element=await context.get_element_by_index(index=index)
-    cordinates=element.center.to_dict()
-    x,y=cordinates.get('x'),cordinates.get('y')
+    handle=await context.get_handle_by_xpath(element.xpath)
     files=[Path(getcwd()).joinpath('./uploads',filename) for filename in filenames]
     page=await context.get_current_page()
     async with page.expect_file_chooser() as file_chooser_info:
-        await page.mouse.click(x=x,y=y)
+        await handle.click()
     file_chooser=await file_chooser_info.value
     handle=file_chooser.element
     if file_chooser.is_multiple():
@@ -192,15 +184,11 @@ async def upload_tool(index:int,filenames:list[str],context:Context=None):
 @Tool('Menu Tool',params=Menu)
 async def menu_tool(index:int,labels:list[str],context:Context=None):
     '''To interact with an element having dropdown menu and select an option from it'''
-    page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
-    cordinates=element.center.to_dict()
-    x,y=cordinates.get('x'),cordinates.get('y')
-    script='([x, y]) => document.elementFromPoint(x, y)'
-    handle=await context.execute_script(page,script,[x,y],enable_handle=True)
+    handle=await context.get_handle_by_xpath(element.xpath)
     labels=labels if len(labels)>1 else labels[0]
     await handle.select_option(label=labels)
-    return f'Opened context menu of element at ({x},{y}) and selected {', '.join(labels)}'
+    return f'Opened context menu of element at label {index} and selected {', '.join(labels)}'
 
 @Tool('Form Tool',params=Form)
 async def form_tool(tool_names:list[Literal['Click Tool','Type Tool','Upload Tool','Menu Tool']],tool_inputs:list[dict],context:Context=None):

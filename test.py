@@ -19,13 +19,9 @@ async def main():
     page=await context.get_current_page()
     dom=DOM(context=context)
     await goto_tool.async_invoke(url='https://google.com',context=context)
-    sleep(5)
+    # sleep(5)
     screenshot,dom_state=await dom.get_state(use_vision=True)
     print(dom_state.nodes)
-    for i,node in enumerate(dom_state.nodes):
-        element_xpath=node.xpath
-        element=await page.query_selector(f'xpath={element_xpath}')
-        print(i,await element.text_content())
     await context.close_session()
     await browser.close_browser()
 
