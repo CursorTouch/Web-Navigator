@@ -26,6 +26,40 @@ class DOM:
                         continue
                     # print(f"Getting elements from frame: {frame.url}")
                     await self.context.execute_script(frame,script)
+                    # await self.context.execute_script(frame,'injectAllCSS()')
+                    # classes=await self.context.execute_script(frame,"""
+                    #     (function () {
+                    #         function getInteractiveClasses() {
+                    #             const interactiveClasses = new Set();
+                    #             for (const sheet of document.styleSheets) {
+                    #                 try {
+                    #                     for (const rule of sheet.cssRules) {
+                    #                         if (!rule.selectorText) continue;
+                    #                         // Check for cursor styles or pseudo-classes
+                    #                         if (
+                    #                             rule.cssText.includes("cursor:") ||
+                    #                             rule.selectorText.includes(":hover") ||
+                    #                             rule.selectorText.includes(":focus") ||
+                    #                             rule.selectorText.includes(":active") ||
+                    #                             rule.cssText.includes("animation") ||
+                    #                             rule.cssText.includes("transition")
+                    #                         ) {
+                    #                             const classes = rule.selectorText.match(/\.[\w-]+/g); // Extract class names
+                    #                             if (classes) {
+                    #                                 classes.forEach(cls => interactiveClasses.add(cls.replace(".", ""))); // Store without '.'
+                    #                             }
+                    #                         }
+                    #                     }
+                    #                 } catch (e) {
+                    #                     console.warn("Couldn't access stylesheet:", sheet.href);
+                    #                 }
+                    #             }
+                    #             return [...interactiveClasses];
+                    #         }
+
+                    #         return getInteractiveClasses();
+                    #     })();
+                    # """)
                     elements=await self.context.execute_script(frame,'getInteractiveElements()')
                     if index>0:
                         frame_element =await frame.frame_element()
@@ -48,8 +82,8 @@ class DOM:
                 print(f"Failed to get elements from frame: {frame.url}\nError: {e}")
             if use_vision:
                 # Add bounding boxes to the interactive elements
-                elements=map(lambda node:node.bounding_box.to_dict(),nodes)
-                await self.context.execute_script(page,'elements=>{mark_page(elements)}',list(elements))
+                boxes=map(lambda node:node.bounding_box.to_dict(),nodes)
+                await self.context.execute_script(page,'boxes=>{mark_page(boxes)}',list(boxes))
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
                 await sleep(2)
