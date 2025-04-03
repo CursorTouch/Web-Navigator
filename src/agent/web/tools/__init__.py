@@ -98,27 +98,14 @@ async def key_tool(keys:str,times:int=1,context:Context=None):
     return f'Pressed {keys}'
 
 @Tool('Download Tool',params=Download)
-async def download_tool(index:int,url:str=None,filename:str=None,context:Context=None):
+async def download_tool(url:str=None,filename:str=None,context:Context=None):
     '''To download a file (e.g., pdf, image, video, audio) to the system'''
-    page=await context.get_current_page()
-    element=await context.get_element_by_index(index=index)
-    handle=await context.get_handle_by_xpath(element.xpath)
     folder_path=Path(context.browser.config.downloads_dir)
-    try:
-        page=await context.get_current_page()
-        async with page.expect_download(timeout=5*1000) as download_info:
-            await handle.click()
-        download=await download_info.value
-        if filename is None:
-            filename=download.suggested_filename
-        path=folder_path.joinpath(filename)
-        await download.save_as(path=path)
-    except:
-        async with httpx.AsyncClient() as client:
-            response=await client.get(url)
-        path=folder_path.joinpath(filename)
-        with open(path,'wb') as f:
-            f.write(response.content)
+    async with httpx.AsyncClient() as client:
+        response=await client.get(url)
+    path=folder_path.joinpath(filename)
+    with open(path,'wb') as f:
+        f.write(response.content)
     return f'Downloaded {filename} from {url} and saved it to {path}'
 
 @Tool('Scrape Tool',params=Scrape)

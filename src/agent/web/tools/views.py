@@ -35,7 +35,6 @@ class Key(SharedBaseModel):
     times:int = Field(description="the number of times to press the key or combination of keys",examples=[2],default=1)
 
 class Download(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to download",examples=[0])
     url:str = Field(...,description="url of the file to download",examples=["https://www.example.com/file.txt","https://abc.org/pdf/54655"])
     filename:str=Field(...,description="the name of the file to download",examples=["file.txt","xy4rs.pdf"])
 

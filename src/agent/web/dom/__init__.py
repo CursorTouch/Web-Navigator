@@ -21,6 +21,7 @@ class DOM:
             frames=page.frames
             try:
                 for index,frame in enumerate(frames):
+                    # print(f"Getting elements from frame: {frame.url}")
                     #index=0 means Main Frame
                     if index>0 and not await self.context.is_frame_visible(frame=frame):
                         continue
