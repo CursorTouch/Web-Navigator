@@ -1,7 +1,7 @@
-from playwright.async_api import Page,Browser as PlaywrightBrowser, Frame,ElementHandle,BrowserContext as PlaywrightBrowserContext
+from playwright.async_api import Page,Browser as PlaywrightBrowser, Frame,ElementHandle,BrowserContext as PlaywrightContext
+from src.agent.web.context.config import IGNORED_URL_PATTERNS,RELEVANT_FILE_EXTENSIONS,RELEVANT_CONTEXT_TYPES
 from src.agent.web.browser.config import BROWSER_ARGS,SECURITY_ARGS,IGNORE_DEFAULT_ARGS
 from src.agent.web.context.views import BrowserSession,BrowserState,Tab
-from src.agent.web.context.config import IGNORED_URL_PATTERNS
 from src.agent.web.context.config import ContextConfig
 from src.agent.web.dom.views import DOMElementNode
 from src.agent.web.browser import Browser
@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 from os import getcwd
+import os
 
 class Context:
     def __init__(self,browser:Browser,config:ContextConfig=ContextConfig()):
@@ -81,7 +82,7 @@ class Context:
             raise ValueError("No current page found")
         return session.current_page
         
-    async def setup_context(self,browser:PlaywrightBrowser|None=None)->PlaywrightBrowserContext:
+    async def setup_context(self,browser:PlaywrightBrowser|None=None)->PlaywrightContext:
         parameters={
             'ignore_https_errors':self.config.disable_security,
             'user_agent':self.config.user_agent,
@@ -151,10 +152,10 @@ class Context:
         return await obj.evaluate(script,args)
     
     def is_ad_url(self,url:str)->bool:
-        netloc=urlparse(url).netloc
-        if not netloc:
+        url_pattern=urlparse(url).netloc
+        if not url_pattern:
             return True
-        return any(netloc in pattern for pattern in IGNORED_URL_PATTERNS)
+        return  url_pattern in IGNORED_URL_PATTERNS
     
     async def is_frame_visible(self,frame:Frame)->bool:
         if frame.is_detached() or self.is_ad_url(frame.url):

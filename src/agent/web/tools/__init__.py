@@ -27,11 +27,11 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
 async def click_tool(index:int,context:Context=None):
     '''To click on elements such as buttons, links, checkboxes, and radio buttons'''
     element=await context.get_element_by_index(index=index)
-    element_handle=await context.get_handle_by_xpath(element.xpath)
+    handle=await context.get_handle_by_xpath(element.xpath)
     if element.attributes.get('type')in ['checkbox','radio']:
-        await element_handle.check(force=True)
+        await handle.check(force=True)
         return f'Checked the element at label {index}'
-    await element_handle.click()
+    await handle.click()
     return f'Clicked on the element at label {index}'
 
 @Tool('Type Tool',params=Type)
