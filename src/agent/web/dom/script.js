@@ -139,12 +139,13 @@
 
         function isElementClickable(element) {
             const style = window.getComputedStyle(element);
+            const isPointer = style.cursor === 'pointer';
             const hasAttributeWithValue = (attr) => {
                 const value = element.getAttribute(attr);
                 return value !== null && value.trim().length > 0;
             };
             const hasDownload=element.hasAttribute('download')
-            return CURSOR_TYPES.has(style.cursor)||hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
+            return isPointer||hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
             hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click")||hasDownload
         }
 
@@ -223,7 +224,7 @@
             if(shadowRoot){
                 Array.from(shadowRoot.children).forEach(child => traverseDom(child));
             }
-            if(!isElementClickable(currentNode)) {
+            if(!isElementClickable(currentNode)||!hasInteractiveTag){
                 Array.from(currentNode.children).forEach(child => traverseDom(child));
             }
         }

@@ -42,6 +42,7 @@ async def type_tool(index:int,text:str,clear:Literal['True','False']='False',con
     page=await context.get_current_page()
     await page.wait_for_load_state('load')
     if clear=='True':
+        await handle.click()
         await handle.press('Control+A')
         await handle.press('Backspace')
     await handle.type(text,delay=80)

@@ -17,4 +17,9 @@ window.navigator.permissions.query = (parameters) => (
   parameters.name === 'notifications' ?
       Promise.resolve({ state: Notification.permission }) :
       originalQuery(parameters)
-  );
+);
+
+const attachShadow = Element.prototype.attachShadow;
+Element.prototype.attachShadow = function (init) {
+  return attachShadow.call(this, { ...init, mode: 'open' });
+};
