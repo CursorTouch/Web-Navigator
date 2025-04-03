@@ -139,8 +139,13 @@
 
         function isElementClickable(element) {
             const style = window.getComputedStyle(element);
-            return CURSOR_TYPES.has(style.cursor)||element.hasAttribute('onclick') || element.hasAttribute('v-on:click') ||
-            element.hasAttribute('@click') || element.hasAttribute("ng-click")
+            const hasAttributeWithValue = (attr) => {
+                const value = element.getAttribute(attr);
+                return value !== null && value.trim().length > 0;
+            };
+            const hasDownload=element.hasAttribute('download')
+            return CURSOR_TYPES.has(style.cursor)||hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
+            hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click")||hasDownload
         }
 
         function isElementCovered(element) {

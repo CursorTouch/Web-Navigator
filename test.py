@@ -18,7 +18,7 @@ async def main():
     await context.init_session()
     page=await context.get_current_page()
     dom=DOM(context=context)
-    await goto_tool.async_invoke(url='https://arxiv.org/pdf/1706.03762',context=context)
+    await goto_tool.async_invoke(url='https://google.com',context=context)
     # sleep(5)
     screenshot,dom_state=await dom.get_state(use_vision=True)
     print(dom_state.nodes)
