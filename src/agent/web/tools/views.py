@@ -9,6 +9,9 @@ class Clipboard(SharedBaseModel):
     mode:Literal['copy','paste'] = Field(...,description="the mode of the clipboard",examples=['copy'])
     text:str = Field(...,description="the text to copy to clipboard",examples=["hello world"])
 
+class Done(SharedBaseModel):
+    answer:str = Field(...,description="the detailed final answer to the user query in markdown",examples=["The task is completed successfully."])
+
 class Click(SharedBaseModel):
     index:int = Field(...,description="the index of the element to click",examples=[0])
 
@@ -30,6 +33,10 @@ class GoTo(SharedBaseModel):
 class Back(SharedBaseModel):
     pass
 
+class Move(SharedBaseModel):
+    x:int = Field(...,description="the x coordinate to move to",examples=[100])
+    y:int = Field(...,description="the y coordinate to move to",examples=[100])
+    
 class Key(SharedBaseModel):
     keys:str = Field(...,description="the key or combination of keys to press",examples=["Enter","Control+A","Backspace"])
     times:int = Field(description="the number of times to press the key or combination of keys",examples=[2],default=1)

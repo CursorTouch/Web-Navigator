@@ -1,4 +1,4 @@
-from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Form
+from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Form,Move,Done
 from main_content_extractor import MainContentExtractor
 from src.agent.web.context import Context
 from typing import Literal,Optional
@@ -22,30 +22,34 @@ async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, conte
         return f'Clipboard Content: "{clipboard_content}"'
     else:
         raise ValueError('Invalid mode. Use "copy" or "paste".')
+    
+@Tool('Done Tool',params=Done)
+async def done_tool(answer:str,context:Context=None):
+    '''To indicate that the task is completed'''
+    return answer
 
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
     '''To click on elements such as buttons, links, checkboxes, and radio buttons'''
+    page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
-    handle=await context.get_handle_by_xpath(element.xpath)
-    if element.attributes.get('type')in ['checkbox','radio']:
-        await handle.check(force=True)
-        return f'Checked the element at label {index}'
-    await handle.click()
+    x,y=element.center.x,element.center.y
+    await page.wait_for_load_state('load')
+    await page.mouse.click(x=x,y=y)
     return f'Clicked on the element at label {index}'
 
 @Tool('Type Tool',params=Type)
 async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
     '''To type text into input fields, search boxes'''
-    element=await context.get_element_by_index(index=index)
-    handle=await context.get_handle_by_xpath(element.xpath)
     page=await context.get_current_page()
+    element=await context.get_element_by_index(index=index)
+    x,y=element.center.x,element.center.y
     await page.wait_for_load_state('load')
+    await page.mouse.click(x=x,y=y)
     if clear=='True':
-        await handle.click()
-        await handle.press('Control+A')
-        await handle.press('Backspace')
-    await handle.type(text,delay=80)
+        await page.keyboard.press('Control+A')
+        await page.keyboard.press('Backspace')
+    await page.keyboard.type(text,delay=80)
     return f'Typed {text} in element at label {index}'
 
 @Tool('Wait Tool',params=Wait)
@@ -79,6 +83,7 @@ async def goto_tool(url:str,context:Context=None):
     '''To navigate directly to a specified URL.'''
     page=await context.get_current_page()
     await page.goto(url=url)
+    await page.wait_for_load_state('load')
     return f'Navigated to {url}'
 
 @Tool('Back Tool',params=Back)
@@ -117,6 +122,13 @@ async def scrape_tool(format:Literal['markdown','text']='markdown',context:Conte
     html=await page.content()
     content=MainContentExtractor.extract(html=html,include_links=True,output_format=format)
     return f'Extracted Page Content:\n{content}'
+
+@Tool('Move Tool',params=Move)
+async def move_tool(x:int,y:int,context:Context=None):
+    '''To move the mouse cursor to a specific position'''
+    page=await context.get_current_page()
+    await page.mouse.move(x=x,y=y)
+    return f'Moved mouse cursor to ({x},{y})'
 
 @Tool('Tab Tool',params=Tab)
 async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]=None,context:Context=None):

@@ -11,5 +11,7 @@ Available Tabs:
 
 Interactive Elements:
 {interactive_elements}
+
+Note: Use the Done Tool if the task is completely over else continue solving.
 </Observation>
 ```

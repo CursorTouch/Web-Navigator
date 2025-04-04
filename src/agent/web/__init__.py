@@ -1,4 +1,4 @@
-from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool
+from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool,move_tool,done_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -19,10 +19,9 @@ import asyncio
 import json
 
 main_tools=[
-    download_tool,upload_tool,
-    click_tool,goto_tool,scrape_tool,  
+    click_tool,goto_tool,move_tool,done_tool,
     type_tool,scroll_tool,wait_tool,menu_tool,
-    clipboard_tool,back_tool,key_tool,tab_tool
+    back_tool,key_tool,tab_tool,scrape_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -110,7 +109,7 @@ class WebAgent(BaseAgent):
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
         return {**state,'agent_data':agent_data,'messages':messages,'prev_observation':observation}
 
-    def answer(self,state:AgentState):
+    async def answer(self,state:AgentState):
         "Give the final answer"
         state['messages'].pop() # Remove the last message for modification
         last_message=state['messages'][-1] # ImageMessage/HumanMessage
@@ -121,11 +120,16 @@ class WebAgent(BaseAgent):
             evaluate=agent_data.get("Evaluate")
             memory=agent_data.get('Memory')
             thought=agent_data.get('Thought')
-            final_answer=agent_data.get('Final Answer')
+            action_name=agent_data.get('Action Name')
+            action_input=agent_data.get('Action Input')
+            action_result=await self.registry.async_execute(action_name,action_input,context=self.context)
+            final_answer=action_result.content
         else:
             evaluate='I have reached the maximum iteration limit.'
             memory='I have reached the maximum iteration limit. Cannot procced further.'
             thought='Looks like I have reached the maximum iteration limit reached.',
+            action_name='Done Tool'
+            action_input='{"answer":"Maximum Iteration reached."}'
             final_answer='Maximum Iteration reached.'
         answer_prompt=self.answer_prompt.format(**{
             'memory':memory,
@@ -148,10 +152,11 @@ class WebAgent(BaseAgent):
         "Route to the next node"
         if self.iteration<self.max_iteration:
             self.iteration+=1
-            route=state.get('route')
-            return route.lower()
-        else:
-            return 'answer'
+            agent_data=state.get('agent_data')
+            action_name=agent_data.get('Action Name')
+            if action_name!='Done Tool':
+                return 'action'
+        return 'answer'
         
     def output_controller(self,state:AgentState):
         if self.structured_output:
@@ -175,7 +180,7 @@ class WebAgent(BaseAgent):
 
         return graph.compile(debug=False)
     
-    async def async_invoke(self, input: str, structured_output:BaseModel=None)->str|BaseModel:
+    async def async_invoke(self, input: str, structured_output:BaseModel=None)->dict|BaseModel:
         self.iteration=0
         self.structured_output=structured_output
         tools_prompt=self.registry.tools_prompt()
@@ -207,17 +212,17 @@ class WebAgent(BaseAgent):
         # Extract and store the key takeaways of the task performed by the agent
         if self.memory:
             self.memory.store(response.get('messages'))
-        return response.get('output')
+        return response
         
-    def invoke(self, input: str,structured_output:BaseModel=None)->str|BaseModel:
+    def invoke(self, input: str,structured_output:BaseModel=None)->dict|BaseModel:
         if self.verbose:
             print(f'Entering '+colored(self.name,'black','on_white'))
         try:
             loop=asyncio.get_event_loop()
-            output=loop.run_until_complete(self.async_invoke(input=input))
+            response=loop.run_until_complete(self.async_invoke(input=input))
         except RuntimeError as e:
             output=asyncio.run(self.async_invoke(input=input))
-        return output
+        return response
     
     async def close(self):
         '''Close the browser and context followed by clean up'''

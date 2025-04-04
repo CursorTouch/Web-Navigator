@@ -4,6 +4,7 @@ from src.agent.web.browser.config import BROWSER_ARGS,SECURITY_ARGS,IGNORE_DEFAU
 from src.agent.web.context.views import BrowserSession,BrowserState,Tab
 from src.agent.web.context.config import ContextConfig
 from src.agent.web.dom.views import DOMElementNode
+from playwright_stealth import stealth_async
 from src.agent.web.browser import Browser
 from src.agent.web.dom import DOM
 from urllib.parse import urlparse
@@ -46,6 +47,7 @@ class Context:
                 page=pages[0]
             else:
                 page=await context.new_page()
+        await stealth_async(page)
         state=await self.initial_state(page)
         self.session=BrowserSession(context,page,state)
         

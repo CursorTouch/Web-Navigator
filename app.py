@@ -1,9 +1,6 @@
 from src.agent.web.browser.config import BrowserConfig
-from src.inference.groq import AudioGroq,ChatGroq
-from src.inference.ollama import ChatOllama
-from src.inference.open_router import ChatOpenRouter
 from src.inference.gemini import ChatGemini
-from pydantic import BaseModel,Field
+from src.inference.groq import AudioGroq
 from src.agent.web import WebAgent
 from dotenv import load_dotenv
 from src.speech import Speech
@@ -23,8 +20,8 @@ browser_instance_dir=os.environ.get('BROWSER_INSTANCE_DIR')
 user_data_dir=os.environ.get('USER_DATA_DIR')
 downloads_dir=os.environ.get('DOWNLOADS_DIR')
 
-config=BrowserConfig(browser='edge',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=downloads_dir,headless=False)
-agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=False,max_iteration=100,token_usage=False)
+config=BrowserConfig(browser='chrome',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=downloads_dir,headless=False)
+agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=False,max_iteration=100,token_usage=True)
 
 mode=input('Enter the mode of input (text/voice): ')
 if mode=='text':
@@ -36,4 +33,4 @@ elif mode=='voice':
 else:
     raise Exception('Invalid mode of input. Please enter either text or voice.')
 agent_response=agent.invoke(user_query)
-print(agent_response)
+print(agent_response.get('output'))
