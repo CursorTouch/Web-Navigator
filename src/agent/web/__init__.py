@@ -1,4 +1,4 @@
-from src.agent.web.tools import click_tool,clipboard_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool,move_tool,done_tool
+from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool,done_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -19,9 +19,9 @@ import asyncio
 import json
 
 main_tools=[
-    click_tool,goto_tool,move_tool,done_tool,
+    click_tool,goto_tool,key_tool,
     type_tool,scroll_tool,wait_tool,menu_tool,
-    back_tool,key_tool,tab_tool,scrape_tool
+    back_tool,tab_tool,scrape_tool,done_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -42,6 +42,8 @@ class WebAgent(BaseAgent):
         self.structured_output=None
         self.use_vision=use_vision
         self.verbose=verbose
+        self.start_time=None
+        self.end_time=None
         self.iteration=0
         self.llm=llm
         self.graph=self.create_graph()
@@ -207,8 +209,14 @@ class WebAgent(BaseAgent):
             'route':'',
             'messages':messages
         }
+        self.start_time=datetime.now()
         response=await self.graph.ainvoke(state,config={'recursion_limit':self.max_iteration})
         await self.close()
+        self.end_time=datetime.now()
+        total_seconds=(self.end_time-self.start_time).total_seconds()
+        if self.verbose and self.token_usage:
+            print(f'Total Time Taken: {total_seconds} seconds Number of Steps: {self.iteration}')
+            print(f'Input Tokens: {self.llm.tokens.input} Output Tokens: {self.llm.tokens.output} Total Tokens: {self.llm.tokens.total}')
         # Extract and store the key takeaways of the task performed by the agent
         if self.memory:
             self.memory.store(response.get('messages'))
@@ -219,9 +227,14 @@ class WebAgent(BaseAgent):
             print(f'Entering '+colored(self.name,'black','on_white'))
         try:
             loop=asyncio.get_event_loop()
-            response=loop.run_until_complete(self.async_invoke(input=input))
+            response=loop.run_until_complete(self.async_invoke(input=input,structured_output=structured_output))
         except RuntimeError as e:
-            output=asyncio.run(self.async_invoke(input=input))
+            print('RuntimeError:',e)
+            response={'input':input,
+            'agent_data':{},
+            'output':f'Error: {e}',
+            'route':'',
+            'messages':[]}
         return response
     
     async def close(self):

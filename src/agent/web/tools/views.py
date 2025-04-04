@@ -5,10 +5,6 @@ class SharedBaseModel(BaseModel):
     class Config:
         extra="allow"
 
-class Clipboard(SharedBaseModel):
-    mode:Literal['copy','paste'] = Field(...,description="the mode of the clipboard",examples=['copy'])
-    text:str = Field(...,description="the text to copy to clipboard",examples=["hello world"])
-
 class Done(SharedBaseModel):
     answer:str = Field(...,description="the detailed final answer to the user query in markdown",examples=["The task is completed successfully."])
 
@@ -16,7 +12,7 @@ class Click(SharedBaseModel):
     index:int = Field(...,description="the index of the element to click",examples=[0])
 
 class Type(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to type in",examples=[0])
+    index:int = Field(...,description="the index of the element to type in the text",examples=[0])
     text:str = Field(...,description="the text to type",examples=["hello world"])
     clear:Literal['True','False']=Field(description="whether to clear the text before typing",default="False",examples=['True'])
 
@@ -24,7 +20,7 @@ class Wait(SharedBaseModel):
     time:int = Field(...,description="the time to wait for the element to be visible in seconds",examples=[1])
 
 class Scroll(SharedBaseModel):
-    direction:Literal['up','down'] = Field(...,description="the direction to scroll",examples=['up'])
+    direction:Literal['up','down'] = Field(description="the direction to scroll",examples=['up'],default='up')
     amount:int = Field(description="the amount to scroll, if None then page up or down",examples=[100],default=None)
 
 class GoTo(SharedBaseModel):
@@ -33,10 +29,6 @@ class GoTo(SharedBaseModel):
 class Back(SharedBaseModel):
     pass
 
-class Move(SharedBaseModel):
-    x:int = Field(...,description="the x coordinate to move to",examples=[100])
-    y:int = Field(...,description="the y coordinate to move to",examples=[100])
-    
 class Key(SharedBaseModel):
     keys:str = Field(...,description="the key or combination of keys to press",examples=["Enter","Control+A","Backspace"])
     times:int = Field(description="the number of times to press the key or combination of keys",examples=[2],default=1)

@@ -47,7 +47,7 @@ class Context:
                 page=pages[0]
             else:
                 page=await context.new_page()
-        await stealth_async(page)
+        # await stealth_async(page)
         state=await self.initial_state(page)
         self.session=BrowserSession(context,page,state)
         

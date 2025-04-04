@@ -1,4 +1,4 @@
-from src.agent.web.tools.views import Clipboard,Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Form,Move,Done
+from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Form,Done
 from main_content_extractor import MainContentExtractor
 from src.agent.web.context import Context
 from typing import Literal,Optional
@@ -7,21 +7,6 @@ from pathlib import Path
 from os import getcwd
 import pyperclip as pc
 import httpx
-
-@Tool('Clipboard Tool', params=Clipboard)
-async def clipboard_tool(mode: Literal['copy', 'paste'], text: str = None, context: Context = None):
-    '''To copy content to clipboard and retrieve it when needed'''
-    if mode == 'copy':
-        if text:
-            pc.copy(text)  # Copy text to system clipboard
-            return f'Copied "{text}" to clipboard'
-        else:
-            raise ValueError("No text provided to copy")
-    elif mode == 'paste':
-        clipboard_content = pc.paste()  # Get text from system clipboard
-        return f'Clipboard Content: "{clipboard_content}"'
-    else:
-        raise ValueError('Invalid mode. Use "copy" or "paste".')
     
 @Tool('Done Tool',params=Done)
 async def done_tool(answer:str,context:Context=None):
@@ -32,10 +17,10 @@ async def done_tool(answer:str,context:Context=None):
 async def click_tool(index:int,context:Context=None):
     '''To click on elements such as buttons, links, checkboxes, and radio buttons'''
     page=await context.get_current_page()
-    element=await context.get_element_by_index(index=index)
-    x,y=element.center.x,element.center.y
     await page.wait_for_load_state('load')
-    await page.mouse.click(x=x,y=y)
+    element=await context.get_element_by_index(index=index)
+    handle=await context.get_handle_by_xpath(element.xpath)
+    await handle.click()
     return f'Clicked on the element at label {index}'
 
 @Tool('Type Tool',params=Type)
@@ -43,9 +28,9 @@ async def type_tool(index:int,text:str,clear:Literal['True','False']='False',con
     '''To type text into input fields, search boxes'''
     page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
-    x,y=element.center.x,element.center.y
+    handle=await context.get_handle_by_xpath(element.xpath)
     await page.wait_for_load_state('load')
-    await page.mouse.click(x=x,y=y)
+    await handle.click()
     if clear=='True':
         await page.keyboard.press('Control+A')
         await page.keyboard.press('Backspace')
@@ -60,9 +45,16 @@ async def wait_tool(time:int,context:Context=None):
     return f'Waited for {time}s'
 
 @Tool('Scroll Tool',params=Scroll)
-async def scroll_tool(direction:str,amount:int=None,context:Context=None):
-    '''To scroll the page by a certain amount or by a page'''
+async def scroll_tool(direction:Literal['up','down']='up',amount:int=None,context:Context=None):
+    '''To scroll the page by a certain amount or by a page up or down and on a specific section of the page'''
     page=await context.get_current_page()
+    scroll_y_before = await context.execute_script(page,"() => window.scrollY")
+    max_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight - window.innerHeight")
+     # Check if scrolling is possible
+    if scroll_y_before >= max_scroll_y and direction == 'down':
+        return "Already at the bottom, cannot scroll further."
+    elif scroll_y_before == 0 and direction == 'up':
+        return "Already at the top, cannot scroll further."
     if direction=='up':
         if amount is None:
             await page.keyboard.press('PageUp')
@@ -75,6 +67,11 @@ async def scroll_tool(direction:str,amount:int=None,context:Context=None):
             await page.mouse.wheel(0,amount)
     else:
         raise ValueError('Invalid direction')
+    # Get scroll position after scrolling
+    scroll_y_after = await page.evaluate("() => window.scrollY")
+    # Verify if scrolling was successful
+    if scroll_y_before == scroll_y_after:
+        return "Scrolling had no effect, possibly already at the limit."
     amount=amount if amount else 'one page'
     return f'Scrolled {direction} by {amount}'
 
@@ -123,44 +120,37 @@ async def scrape_tool(format:Literal['markdown','text']='markdown',context:Conte
     content=MainContentExtractor.extract(html=html,include_links=True,output_format=format)
     return f'Extracted Page Content:\n{content}'
 
-@Tool('Move Tool',params=Move)
-async def move_tool(x:int,y:int,context:Context=None):
-    '''To move the mouse cursor to a specific position'''
-    page=await context.get_current_page()
-    await page.mouse.move(x=x,y=y)
-    return f'Moved mouse cursor to ({x},{y})'
-
-@Tool('Tab Tool',params=Tab)
-async def tab_tool(mode:Literal['open','close','switch'],tab_index:Optional[int]=None,context:Context=None):
-    '''To open a new tab, close the current tab and switch from current tab to the specified tab'''
-    session=await context.get_session()
-    if mode=='open':
-        page=await session.context.new_page()
-        session.current_page=page
+@Tool('Tab Tool', params=Tab)
+async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional[int] = None, context: Context = None):
+    '''To open a new tab, close the current tab, and switch from the current tab to the specified tab'''
+    session = await context.get_session()
+    pages = session.context.pages  # Get all open tabs
+    if mode == 'open':
+        page = await session.context.new_page()
+        session.current_page = page
         await page.wait_for_load_state('load')
-        return f'Opened new tab and switched to it'
-    elif mode=='close':
-        page=session.current_page
+        return 'Opened a new tab and switched to it.'
+    elif mode == 'close':
+        if len(pages) == 1:
+            return 'Cannot close the last remaining tab.'
+        page = session.current_page
         await page.close()
-        pages=session.context.pages
-        if tab_index is not None and tab_index>len(pages):
-            raise IndexError('Index out of range')
-        page=pages[-1]
-        session.current_page=page
-        await page.bring_to_front()
-        await page.wait_for_load_state('load')
-        return f'Closed current tab and switched to previous tab'
-    elif mode=='switch':
-        pages=session.context.pages
-        if tab_index is not None and tab_index>len(pages):
-            raise IndexError('Index out of range')
-        page=pages[tab_index]
-        session.current_page=page
-        await page.bring_to_front()
-        await page.wait_for_load_state('load')
-        return f'Switched to tab {tab_index}'
+        # Get remaining pages after closing
+        pages = session.context.pages  
+        session.current_page = pages[-1]  # Switch to last remaining tab
+        await session.current_page.bring_to_front()
+        await session.current_page.wait_for_load_state('load')
+        return f'Closed current tab and switched to the previous tab.'
+    elif mode == 'switch':
+        if tab_index is None or tab_index < 0 or tab_index >= len(pages):
+            raise IndexError(f'Tab index {tab_index} is out of range. Available tabs: {len(pages)}')
+        session.current_page = pages[tab_index]
+        await session.current_page.bring_to_front()
+        await session.current_page.wait_for_load_state('load')
+        return f'Switched to tab {tab_index} (Total tabs: {len(pages)}).'
     else:
-        raise ValueError('Invalid mode')
+        raise ValueError("Invalid mode. Use 'open', 'close', or 'switch'.")
+
     
 @Tool('Upload Tool',params=Upload)   
 async def upload_tool(index:int,filenames:list[str],context:Context=None):

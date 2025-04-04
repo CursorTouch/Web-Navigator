@@ -3,7 +3,7 @@ Object.defineProperty(navigator, 'webdriver', {
 });
   
 Object.defineProperty(navigator, 'languages', {
-  get: () => ['en-US', 'en-IN']
+  get: () => ['en-US', 'en']
 });
   
 Object.defineProperty(navigator, 'plugins', {
