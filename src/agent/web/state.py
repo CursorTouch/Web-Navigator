@@ -8,5 +8,4 @@ class AgentState(TypedDict):
     output:str|BaseModel
     agent_data:dict
     prev_observation:str
-    route:str
     messages: Annotated[list[BaseMessage],add]

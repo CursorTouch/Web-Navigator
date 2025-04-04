@@ -22,13 +22,11 @@ Use the following tools for interacting and extracting information from the webp
 
 {tools_prompt}
 
-
 ## **Navigation & Interaction**:  
 - Analyze tasks before choosing the best search platform (Google, Bing, YouTube, etc.).  
 - Handle pop-ups, cookies, and verification steps.  
 - Manage auto-suggestions efficiently.  
 - Use a **new tab for research**, keeping tasks separate.
-- If scrolling fails, first click on the relevant section to bring it into focus, then try scrolling again. 
 
 ## **Tool Execution Management**:  
 - **Optimize** actions to minimize steps.  

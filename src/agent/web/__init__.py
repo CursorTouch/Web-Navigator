@@ -206,7 +206,6 @@ class WebAgent(BaseAgent):
             'input':input,
             'agent_data':{},
             'output':'',
-            'route':'',
             'messages':messages
         }
         self.start_time=datetime.now()
@@ -233,7 +232,6 @@ class WebAgent(BaseAgent):
             response={'input':input,
             'agent_data':{},
             'output':f'Error: {e}',
-            'route':'',
             'messages':[]}
         return response
     

@@ -6,7 +6,7 @@ class SharedBaseModel(BaseModel):
         extra="allow"
 
 class Done(SharedBaseModel):
-    answer:str = Field(...,description="the detailed final answer to the user query in markdown",examples=["The task is completed successfully."])
+    answer:str = Field(...,description="the detailed final answer to the user query in proper markdown format",examples=["The task is completed successfully."])
 
 class Click(SharedBaseModel):
     index:int = Field(...,description="the index of the element to click",examples=[0])
