@@ -55,44 +55,25 @@
         }
     }
 
-    function getXPath(element, optimized = true) {
-        if (!element || element.nodeType !== 1) return ''; // Only process ELEMENT_NODEs
-    
-        // If the element has an ID, return the shortest XPath
-        if (element.id && optimized) return `//*[@id="${element.id}"]`;
-    
-        const parts = [];
-        while (element.parentNode) {
-            let tagName = element.tagName.toLowerCase();
-    
-            // Check if this tag has unique attributes to use
-            if (optimized) {
-                if (element.id) {
-                    parts.unshift(`//*[@id="${element.id}"]`);
-                    break;
+    function getXPath(element) {
+        if (!element || element.nodeType !== Node.ELEMENT_NODE) return "";
+        let parts = [];
+        while (element && element.nodeType === Node.ELEMENT_NODE) {
+            let index = 1;
+            let sibling = element.previousElementSibling;
+            // Count preceding siblings of the same tag type
+            while (sibling) {
+                if (sibling.tagName === element.tagName) {
+                    index++;
                 }
-                if (element.className && document.getElementsByClassName(element.className).length === 1) {
-                    parts.unshift(`//${tagName}[@class="${element.className}"]`);
-                    break;
-                }
-            }
-    
-            // Find position among siblings of the same tag
-            let index = 1, sibling = element;
-            while (sibling.previousElementSibling) {
                 sibling = sibling.previousElementSibling;
-                if (sibling.tagName.toLowerCase() === tagName) index++;
             }
-    
-            // Only add index if there are multiple siblings with the same tag
-            const needsIndex = element.parentNode.querySelectorAll(tagName).length > 1;
-            parts.unshift(needsIndex ? `${tagName}[${index}]` : tagName);
-    
+            let tagName = element.tagName.toLowerCase();
+            let part = `${tagName}[${index}]`;
+            parts.unshift(part);
             element = element.parentNode;
-            if (element.tagName.toLowerCase() === 'html') break;
         }
-    
-        return '/' + parts.join('/');
+        return "/" + parts.join("/");
     }
 
     // Extract visible interactive elements`

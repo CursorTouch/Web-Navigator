@@ -215,8 +215,8 @@ class WebAgent(BaseAgent):
         self.end_time=datetime.now()
         total_seconds=(self.end_time-self.start_time).total_seconds()
         if self.verbose and self.token_usage:
-            print(f'Total Time Taken: {total_seconds} seconds Number of Steps: {self.iteration}')
             print(f'Input Tokens: {self.llm.tokens.input} Output Tokens: {self.llm.tokens.output} Total Tokens: {self.llm.tokens.total}')
+            print(f'Total Time Taken: {total_seconds} seconds Number of Steps: {self.iteration}')
         # Extract and store the key takeaways of the task performed by the agent
         if self.memory:
             self.memory.store(response.get('messages'))
