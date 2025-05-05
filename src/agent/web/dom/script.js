@@ -1,7 +1,7 @@
 const INTERACTIVE_TAGS =new Set([
     'a', 'button', 'details', 'embed', 'input','option','canvas',
     'menu', 'menuitem', 'object', 'select', 'textarea', 'summary',
-    'dialog', 'banner'
+    'dialog', 'banner','span'
 ])
 
 const INFORMATIVE_TAGS=new Set([
@@ -166,8 +166,9 @@ async function getElements(node=document.body) {
         const hasDownload=element.hasAttribute('download');
         const hasClickHandler = hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
         hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click")
-        const hasAttribute=hasAttributeWithValue("data-tooltip")||hasAttributeWithValue("data-qa")||hasAttributeWithValue("data-cy")
-        ||hasAttributeWithValue("data-id")||hasAttributeWithValue("data-testid");
+        const hasAttribute=hasAttributeWithValue('data-testid')||hasAttributeWithValue('data-id')||hasAttributeWithValue('data-qa')||
+        hasAttributeWithValue('data-cy')||hasAttributeWithValue('data-cypress')||hasAttributeWithValue('data-testid')||
+        hasAttributeWithValue('data-id')||hasAttributeWithValue('data-tooltip')
         return isPointer||hasClickHandler||hasDownload||hasAttribute;
     }
 
