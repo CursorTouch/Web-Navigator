@@ -12,3 +12,4 @@ pyaudio
 pyperclip
 keyboard
 pydantic
+youtube-transcript-api

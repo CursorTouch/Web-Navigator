@@ -1,4 +1,4 @@
-from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,upload_tool,menu_tool,form_tool,done_tool
+from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,forward_tool,menu_tool,done_tool,transcript_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -19,15 +19,16 @@ import asyncio
 import json
 
 main_tools=[
-    click_tool,goto_tool,key_tool,
+    click_tool,goto_tool,key_tool,download_tool,
     type_tool,scroll_tool,wait_tool,menu_tool,
-    back_tool,tab_tool,scrape_tool,done_tool
+    back_tool,tab_tool,done_tool,forward_tool,
+    transcript_tool
 ]
 
 class WebAgent(BaseAgent):
     def __init__(self,config:BrowserConfig=None,additional_tools:list[Tool]=[],instructions:list=[],memory:BaseMemory=None,llm:BaseInference=None,max_iteration:int=10,use_vision:bool=False,verbose:bool=False,token_usage:bool=False) -> None:
         self.name='Web Agent'
-        self.description='The web agent is designed to automate the process of gathering information from the internet, such as to navigate websites, perform searches, and retrieve data.'
+        self.description='The Web Agent is designed to automate the process of gathering information from the internet, such as to navigate websites, perform searches, and retrieve data.'
         self.observation_prompt=read_markdown_file('./src/agent/web/prompt/observation.md')
         self.system_prompt=read_markdown_file('./src/agent/web/prompt/system.md')
         self.action_prompt=read_markdown_file('./src/agent/web/prompt/action.md')
@@ -36,13 +37,13 @@ class WebAgent(BaseAgent):
         self.registry=Registry(main_tools+additional_tools)
         self.browser=Browser(config=config)
         self.context=Context(browser=self.browser)
-        self.memory=memory
         self.max_iteration=max_iteration
         self.token_usage=token_usage
         self.structured_output=None
         self.use_vision=use_vision
         self.verbose=verbose
         self.start_time=None
+        self.memory=memory
         self.end_time=None
         self.iteration=0
         self.llm=llm
@@ -90,8 +91,7 @@ class WebAgent(BaseAgent):
         # Get the current browser state
         browser_state=await self.context.get_state(use_vision=self.use_vision)
         image_obj=browser_state.screenshot
-        # print('Tabs',browser_state.tabs_to_string())
-        # print(browser_state.dom_state.elements_to_string())
+        current_tab=browser_state.current_tab
         # Redefining the AIMessage and adding the new observation
         action_prompt=self.action_prompt.format(**{
             'memory':memory,
@@ -104,12 +104,13 @@ class WebAgent(BaseAgent):
             'iteration':self.iteration,
             'max_iteration':self.max_iteration,
             'observation':observation,
-            'current_url':browser_state.url,
+            'current_tab':current_tab.to_string(),
             'tabs':browser_state.tabs_to_string(),
-            'interactive_elements':browser_state.dom_state.elements_to_string()
+            'interactive_elements':browser_state.dom_state.interactive_elements_to_string(),
+            'informative_elements':browser_state.dom_state.informative_elements_to_string()
         })
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
-        return {**state,'agent_data':agent_data,'messages':messages,'prev_observation':observation}
+        return {**state,'messages':messages,'prev_observation':observation}
 
     async def answer(self,state:AgentState):
         "Give the final answer"
@@ -124,7 +125,7 @@ class WebAgent(BaseAgent):
             thought=agent_data.get('Thought')
             action_name=agent_data.get('Action Name')
             action_input=agent_data.get('Action Input')
-            action_result=await self.registry.async_execute(action_name,action_input,context=self.context)
+            action_result=await self.registry.async_execute(action_name,action_input,context=None)
             final_answer=action_result.content
         else:
             evaluate='I have reached the maximum iteration limit.'

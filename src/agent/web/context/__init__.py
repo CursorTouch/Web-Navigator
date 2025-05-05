@@ -1,10 +1,9 @@
-from playwright.async_api import Page,Browser as PlaywrightBrowser, Frame,ElementHandle,BrowserContext as PlaywrightContext
+from playwright.async_api import Page,Browser as PlaywrightBrowser,Frame,ElementHandle,BrowserContext as PlaywrightContext
 from src.agent.web.context.config import IGNORED_URL_PATTERNS,RELEVANT_FILE_EXTENSIONS,RELEVANT_CONTEXT_TYPES
 from src.agent.web.browser.config import BROWSER_ARGS,SECURITY_ARGS,IGNORE_DEFAULT_ARGS
 from src.agent.web.context.views import BrowserSession,BrowserState,Tab
 from src.agent.web.context.config import ContextConfig
 from src.agent.web.dom.views import DOMElementNode
-from playwright_stealth import stealth_async
 from src.agent.web.browser import Browser
 from src.agent.web.dom import DOM
 from urllib.parse import urlparse
@@ -12,7 +11,6 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 from os import getcwd
-import os
 
 class Context:
     def __init__(self,browser:Browser,config:ContextConfig=ContextConfig()):
@@ -29,6 +27,8 @@ class Context:
         await self.close_session()
 
     async def close_session(self):
+        if self.session is None:
+            return None
         try:
             await self.session.context.close()
         except Exception as e:
@@ -47,24 +47,22 @@ class Context:
                 page=pages[0]
             else:
                 page=await context.new_page()
-        # await stealth_async(page)
         state=await self.initial_state(page)
         self.session=BrowserSession(context,page,state)
         
     async def initial_state(self,page:Page):
-        dom_state=[]
+        screenshot,dom_state=None,[]
+        current_tab=Tab(0,page.url,await page.title(),page)
         tabs=[]
-        screenshot=None
-        state=BrowserState(url=page.url,title=await page.title(),tabs=tabs,screenshot=screenshot,dom_state=dom_state)
+        state=BrowserState(current_tab=current_tab,tabs=tabs,screenshot=screenshot,dom_state=dom_state)
         return state
     
     async def update_state(self,use_vision:bool=False):
-        page=await self.get_current_page()
         dom=DOM(self)
         screenshot,dom_state=await dom.get_state(use_vision=use_vision)
-        # print(dom_state.elements_to_string())
-        tabs=await self.get_tabs()
-        state=BrowserState(url=page.url,title=await page.title(),tabs=tabs,screenshot=screenshot,dom_state=dom_state)
+        current_tab=await self.get_current_tab()
+        tabs=await self.get_all_tabs()
+        state=BrowserState(current_tab=current_tab,tabs=tabs,screenshot=screenshot,dom_state=dom_state)
         return state
     
     async def get_state(self,use_vision=False)->BrowserState:
@@ -121,10 +119,15 @@ class Context:
                 raise Exception('Invalid Browser Type')
         return context
     
-    async def get_tabs(self)->list[Tab]:
+    async def get_all_tabs(self)->list[Tab]:
         session=await self.get_session()
         pages=session.context.pages
-        return [Tab(index+1,page.url,await page.title()) for index,page in enumerate(pages)]
+        return [Tab(index,page.url,await page.title(),page) for index,page in enumerate(pages)]
+    
+    async def get_current_tab(self)->Tab:
+        tabs=await self.get_all_tabs()
+        current_page=await self.get_current_page()
+        return next((tab for tab in tabs if tab.page==current_page),None)
     
     async def get_selector_map(self)->dict[int,DOMElementNode]:
         session=await self.get_session()
@@ -133,7 +136,7 @@ class Context:
     async def get_element_by_index(self,index:int)->DOMElementNode:
         selector_map=await self.get_selector_map()
         if index not in selector_map.keys():
-            raise Exception('Index not found')
+            raise Exception(f'Element under index {index} not found')
         element=selector_map.get(index)
         return element
     
@@ -157,7 +160,7 @@ class Context:
         url_pattern=urlparse(url).netloc
         if not url_pattern:
             return True
-        return  url_pattern in IGNORED_URL_PATTERNS
+        return any(pattern in url_pattern for pattern in IGNORED_URL_PATTERNS)
     
     async def is_frame_visible(self,frame:Frame)->bool:
         if frame.is_detached() or self.is_ad_url(frame.url):
@@ -165,10 +168,15 @@ class Context:
         frame_element=await frame.frame_element()
         if frame_element is None: 
             return False
+        style=await frame_element.get_attribute('style')
+        if style is not None:
+            css:dict=self.inline_style_parser(style)
+            if any([css.get('display')=='none',css.get('visibility')=='hidden']):
+                return False
         bbox=await frame_element.bounding_box()
         if bbox is None:
             return False
-        area=bbox['width']*bbox['height']
+        area=bbox.get('width')*bbox.get('height')
         if any([bbox.get('x')<0,bbox.get('y')<0,area<10]):
             return False
         return True
@@ -189,3 +197,13 @@ class Context:
     async def is_page_blank(self):
         page=await self.get_current_page()
         return page.url=='about:blank'
+    
+    def inline_style_parser(self,style:str)->dict[str,str]:
+        styles = {}
+        if not style:
+            return styles
+        for rule in style.split(";"):
+            if ":" in rule:
+                prop, val = rule.split(":", 1)
+                styles[prop.strip()] = val.strip()
+        return styles

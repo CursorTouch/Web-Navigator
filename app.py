@@ -15,12 +15,7 @@ open_router_api_key=os.getenv('OPEN_ROUTER_API_KEY')
 llm=ChatGemini(model='gemini-2.0-flash',api_key=google_api_key,temperature=0)
 speech_llm=AudioGroq(model='whisper-large-v3',mode='translations',api_key=groq_api_key,temperature=0)
 
-# Initialize Web Agent
-browser_instance_dir=os.environ.get('BROWSER_INSTANCE_DIR')
-user_data_dir=os.environ.get('USER_DATA_DIR')
-downloads_dir=os.environ.get('DOWNLOADS_DIR')
-
-config=BrowserConfig(browser='chrome',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,downloads_dir=downloads_dir,headless=False)
+config=BrowserConfig(browser='chrome',headless=False)
 agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=False,max_iteration=100,token_usage=True)
 
 mode=input('Enter the mode of input (text/voice): ')

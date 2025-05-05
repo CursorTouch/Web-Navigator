@@ -8,17 +8,20 @@ class Tab:
 	id:int
 	url:str
 	title:str
+	page:Page
+	
+	def to_string(self)->str:
+		return f'{self.id} - Title: {self.title} - URL: {self.url}'
 
 @dataclass
 class BrowserState:
-	url:str=''
-	title:str=''
+	current_tab:Optional[Tab]=None
 	tabs:list[Tab]=field(default_factory=list)
 	screenshot:Optional[str]=None
 	dom_state:DOMState=field(default_factory=DOMState([]))
 	
 	def tabs_to_string(self)->str:
-		return '\n'.join([f'{tab.id} - Title: {tab.title} - URL: {tab.url}' for tab in self.tabs])
+		return '\n'.join([tab.to_string() for tab in self.tabs])
 
 @dataclass
 class BrowserSession:

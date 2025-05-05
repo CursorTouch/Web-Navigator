@@ -61,7 +61,7 @@ IGNORED_URL_PATTERNS = set([
 	'analytics',
 	'tracking',
 	'telemetry',
-    'googletagmanager'
+    'googletagmanager',
 	'beacon',
 	'metrics',
 	'doubleclick',

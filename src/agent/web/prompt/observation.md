@@ -4,13 +4,20 @@ Execution Step: ({iteration}/{max_iteration})
 
 Action Response: {observation}
 
-Current URL: {current_url}
+[Begin Tab Info]
+Current Tab: {current_tab}
 
-Available Tabs:
+Open Tabs:
 {tabs}
+[End of Tab Info]
 
-Interactive Elements:
+[Begin of Viewport]
+List of Interactive Elements:
 {interactive_elements}
+
+List of Informative Elements:
+{informative_elements}
+[End of Viewport]
 
 Note: Use the Done Tool if the task is completely over else continue solving.
 </Observation>

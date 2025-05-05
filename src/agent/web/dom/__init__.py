@@ -1,4 +1,4 @@
-from src.agent.web.dom.views import DOMElementNode, DOMState, CenterCord, BoundingBox
+from src.agent.web.dom.views import DOMElementNode, DOMTextualNode, DOMState, CenterCord, BoundingBox
 from playwright.async_api import Page, Frame
 from typing import TYPE_CHECKING
 from asyncio import sleep
@@ -13,39 +13,36 @@ class DOM:
     async def get_state(self,use_vision:bool=False)->tuple[str|None,DOMState]:
         '''Get the state of the webpage.'''
         try:
-            nodes:list[DOMElementNode]=[]
             selector_map={}
             with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
-            await sleep(1.5)
+            await sleep(1.25)
             page=await self.context.get_current_page()
             await page.wait_for_load_state('load')
             await self.context.execute_script(page,script)
-            nodes=[]
             #Access from frames
             frames=page.frames
-            elements=await self.get_interactive_elements(frames=frames)
-            nodes.extend(elements)
+            interactive_nodes,informative_nodes=await self.get_elements(frames=frames)
             if use_vision:
                 # Add bounding boxes to the interactive elements
-                boxes=map(lambda node:node.bounding_box.to_dict(),nodes)
+                boxes=map(lambda node:node.bounding_box.to_dict(),interactive_nodes)
                 await self.context.execute_script(page,'boxes=>{mark_page(boxes)}',list(boxes))
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
-                await sleep(1.0)
+                await sleep(5.0)
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
         except Exception as e:
             print(f"Failed to get elements from page: {page.url}\nError: {e}")
-            nodes=[]
+            interactive_nodes,informative_nodes=[],[]
             screenshot=None
-        selector_map=dict(enumerate(nodes))
-        return (screenshot,DOMState(nodes=nodes,selector_map=selector_map))
+        selector_map=dict(enumerate(interactive_nodes))
+        return (screenshot,DOMState(interactive_nodes=interactive_nodes,informative_nodes=informative_nodes,selector_map=selector_map))
     
-    async def get_interactive_elements(self,frames:list[Frame|Page])->list[DOMElementNode]:
+    async def get_elements(self,frames:list[Frame|Page])->tuple[list[DOMElementNode],list[DOMTextualNode]]:
         '''Get the interactive elements of the webpage.'''
-        nodes=[]
+        interactive_elements,informative_elements=[],[]
         with open('./src/agent/web/dom/script.js') as f:
             script=f.read()
         try:
@@ -57,13 +54,14 @@ class DOM:
                     continue
                 # print(f"Getting elements from frame: {frame.url}")
                 await self.context.execute_script(frame,script)
-                elements=await self.context.execute_script(frame,'getInteractiveElements()')
+                nodes:dict=await self.context.execute_script(frame,'getElements()')
+                element_nodes,textual_nodes=nodes.values()
                 if index>0:
                     frame_element =await frame.frame_element()
                     frame_xpath=await self.context.execute_script(frame,'(frame_element)=>getXPath(frame_element)',frame_element)
                 else:
                     frame_xpath=''
-                for element in elements:
+                for element in element_nodes:
                     element_xpath=element.get('xpath')
                     node=DOMElementNode(**{
                         'tag':element.get('tag'),
@@ -74,8 +72,19 @@ class DOM:
                         'bounding_box':BoundingBox(**element.get('box')),
                         'xpath':{'frame':frame_xpath,'element':element_xpath}
                     })
-                    nodes.append(node)
+                    interactive_elements.append(node)
+                
+                for element in textual_nodes:
+                    element_xpath=element.get('xpath')
+                    node=DOMTextualNode(**{
+                        'tag':element.get('tag'),
+                        'role':element.get('role'),
+                        'content':element.get('content'),
+                        'center':CenterCord(**element.get('center')),
+                        'xpath':{'frame':frame_xpath,'element':element_xpath}
+                    })
+                    informative_elements.append(node)
+
         except Exception as e:
             print(f"Failed to get elements from frame: {frame.url}\nError: {e}")
-            nodes=[]
-        return nodes
+        return interactive_elements,informative_elements

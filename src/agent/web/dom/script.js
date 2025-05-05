@@ -4,6 +4,16 @@ const INTERACTIVE_TAGS =new Set([
     'dialog', 'banner'
 ])
 
+const INFORMATIVE_TAGS=new Set([
+    'h1','h2','h3','h4','h5','h6','p','label',
+    'dl','dt','dd','code','pre','img','div',
+    'table','tbody','thead','th','td','article'
+])
+
+const EXPLORABLE_TAGS=new Set([
+    'div','span','article','section','nav','header','footer','main','ul','ol'
+])
+
 const EXCLUDED_TAGS =new Set([
     'style', 'script', 'noscript','link','meta'
 ])
@@ -15,8 +25,15 @@ const INTERACTIVE_ROLES =new Set([
     'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 
     'a-dropdown-button', 'click','menuitemcheckbox', 'menuitemradio', 
     'a-button-text', 'button-text', 'button-icon', 'button-icon-only',
-    'button-text-icon-only', 'dropdown', 'combobox'
+    'button-text-icon-only', 'dropdown', 'combobox','gridcell',
 ])
+
+const INFORMATIVE_ROLES = new Set([
+    'article','document','heading','note',
+    'definition','paragraph','contentinfo',
+    'status','alert','log','tooltip','text',
+    'term','region','presentation'
+  ]);
 
 const CURSOR_TYPES=new Set(["pointer", "move", "text", "grab", "cell"])
 
@@ -76,22 +93,24 @@ function getXPath(element) {
     return "/" + parts.join("/");
 }
 
-// Extract visible interactive elements`
-async function getInteractiveElements(node=document.body) {
+function waitForPageToLoad() {
+    return new Promise((resolve, reject) => {
+        if (document.readyState === 'complete') {
+            resolve();
+        } else {
+            window.addEventListener('load', resolve); // Resolves when the load event fires
+        }
+    });
+}
+
+// Extract visible elements
+async function getElements(node=document.body) {
     const interactiveElements = [];
-    // Function to wait for the page to be fully loaded
-    function waitForPageToLoad() {
-        return new Promise((resolve, reject) => {
-            if (document.readyState === 'complete') {
-                resolve();
-            } else {
-                window.addEventListener('load', resolve); // Resolves when the load event fires
-            }
-        });
-    }  
+    const informativeElements = [];
+    // Function to wait for the page to be fully loaded  
     await waitForPageToLoad();
 
-    function isVisible(element) {
+    function isElementVisible(element) {
         let type = element.getAttribute('type');
         // The radio and checkbox elements are all ready invisible so we can skip them
         if(new Set(['radio', 'checkbox']).has(type)) return true;
@@ -142,11 +161,12 @@ async function getInteractiveElements(node=document.body) {
         const isPointer = style.cursor === 'pointer';
         const hasAttributeWithValue = (attr) => {
             const value = element.getAttribute(attr);
-            return value !== null && value.trim().length > 0;
+            return value !== null && value.trim() !== '';
         };
-        const hasDownload=element.hasAttribute('download')
-        return isPointer||hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
-        hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click")||hasDownload
+        const hasDownload=element.hasAttribute('download');
+        const hasClickHandler = hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
+        hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click");
+        return isPointer||hasClickHandler||hasDownload;
     }
 
     function isElementCovered(element) {
@@ -174,12 +194,15 @@ async function getInteractiveElements(node=document.body) {
 
         const tagName = currentNode.tagName.toLowerCase();
         if (EXCLUDED_TAGS.has(tagName)) return;
-        const role = currentNode.getAttribute('role');
 
+        const role = currentNode.getAttribute('role');
         const hasInteractiveTag = INTERACTIVE_TAGS.has(tagName);
         const hasInteractiveRole = role && INTERACTIVE_ROLES.has(role);
 
-        if ((hasInteractiveTag || hasInteractiveRole ||isElementClickable(currentNode)) && (isVisible(currentNode) && isElementInViewport(currentNode))) {
+        // Get Interactive Elements
+        const isClickable =isElementClickable(currentNode) ||hasInteractiveTag || hasInteractiveRole
+        const isVisible = isElementVisible(currentNode) && isElementInViewport(currentNode)
+        if (isClickable && isVisible) {
             // Check if the element is covered by another element
             const isCovered = !isElementCovered(currentNode);
             if (isCovered) {
@@ -201,35 +224,73 @@ async function getInteractiveElements(node=document.body) {
                 const y = Math.floor(boundingBox.top + boundingBox.height / 2);
                 const xpath=getXPath(currentNode)
 
-                interactiveElements.push({
+                const role = currentNode.getAttribute('role') || 'none';
+                const name = currentNode.getAttribute('aria-label') ||
+                currentNode.getAttribute('name') ||
+                currentNode.getAttribute('aria-labelledby') ||
+                currentNode.getAttribute('aria-describedby') ||
+                currentNode.innerText?.replace(/\s+/g, ' ').trim() || 'none';
+                // Skip elements with no role or name or explorable tags to avoid the idle elements
+                if(role !== 'none' || name !== 'none' || !EXPLORABLE_TAGS.has(tagName)){
+                    interactiveElements.push({
+                        tag: currentNode.tagName.toLowerCase(),
+                        role: role,  // Default to 'none' if no role is found
+                        name: name, // Trim textContent if it exists
+                        attributes: Object.fromEntries(
+                            Array.from(currentNode.attributes)
+                                .filter(attr => SAFE_ATTRIBUTES.has(attr.name))
+                                .map(attr => [attr.name, attr.value])),
+                        box: boundingBox || null,  // Avoid undefined errors
+                        center: { x, y },
+                        xpath: xpath
+                    });
+                }
+            }
+        }
+
+        const hasInformativeTag = INFORMATIVE_TAGS.has(tagName);
+        const hasInformativeRole = role && INFORMATIVE_ROLES.has(role);
+        const hasContent = currentNode.innerText?.trim()!==''
+
+        // Get Informative Elements
+        const isTextual = ((hasInformativeTag || hasInformativeRole) && hasContent) && !isElementClickable(currentNode)
+        if (isTextual && isVisible) {
+            // Check if the element is covered by another element
+            const isCovered = !isElementCovered(currentNode);
+            if (isCovered) {
+                const rect = currentNode.getBoundingClientRect();
+                let left = rect.left;
+                let top = rect.top;
+                let width = rect.width;
+                let height = rect.height;
+                let frame = window.frameElement;
+                // If the element is in an iframe, adjust the coordinates
+                while (frame!=null) {
+                    let frameRect = frame.getBoundingClientRect();
+                    left += frameRect.left;
+                    top += frameRect.top;
+                    frame = frame.ownerDocument.defaultView?.frameElement;
+                }
+                const boundingBox = { left, top, width, height };
+                const x = Math.floor(boundingBox.left + boundingBox.width / 2);
+                const y = Math.floor(boundingBox.top + boundingBox.height / 2);
+                const xpath=getXPath(currentNode)
+                informativeElements.push({
                     tag: currentNode.tagName.toLowerCase(),
-                    role: currentNode.getAttribute('role') || 'none',  // Default to 'none' if no role is found
-                    name: currentNode.getAttribute('aria-label') ||
-                          currentNode.getAttribute('name') ||
-                          currentNode.getAttribute('aria-labelledby') ||
-                          currentNode.getAttribute('aria-describedby') ||
-                          currentNode.textContent?.replace(/\s+/g, ' ').trim().split('.')[0] || 'none', // Trim textContent if it exists
-                    attributes: Object.fromEntries(
-                        Array.from(currentNode.attributes)
-                            .filter(attr => SAFE_ATTRIBUTES.has(attr.name))
-                            .map(attr => [attr.name, attr.value])),
-                    box: boundingBox || null,  // Avoid undefined errors
-                    center: { x, y },
+                    role: role,
+                    content: currentNode.innerText?.trim(),
+                    center:{x,y},
                     xpath: xpath
                 });
             }
         }
-        // Handle shadow DOM
-        const shadowRoot=currentNode.shadowRoot
-        if(shadowRoot){
-            Array.from(shadowRoot.children).forEach(child => traverseDom(child));
-        }
-        if(!isElementClickable(currentNode)){
+        
+        if (!isClickable || EXPLORABLE_TAGS.has(tagName)) {
             Array.from(currentNode.children).forEach(child => traverseDom(child));
         }
     }
     traverseDom(node);
-    return interactiveElements;
+    return {interactiveElements,informativeElements};
 }
 
 // Mark page by placing bounding boxes and labels

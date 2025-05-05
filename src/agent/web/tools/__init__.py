@@ -1,5 +1,7 @@
-from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Form,Done
+from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward,Transcript
 from main_content_extractor import MainContentExtractor
+from youtube_transcript_api import YouTubeTranscriptApi
+from urllib.parse import urlparse, parse_qs
 from src.agent.web.context import Context
 from typing import Literal,Optional
 from src.tool import Tool
@@ -9,9 +11,9 @@ import pyperclip as pc
 import httpx
     
 @Tool('Done Tool',params=Done)
-async def done_tool(answer:str,context:Context=None):
+async def done_tool(content:str,context:Context=None):
     '''To indicate that the task is completed'''
-    return answer
+    return content
 
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
@@ -20,7 +22,10 @@ async def click_tool(index:int,context:Context=None):
     await page.wait_for_load_state('load')
     element=await context.get_element_by_index(index=index)
     handle=await context.get_handle_by_xpath(element.xpath)
-    await handle.click()
+    is_hidden=await handle.is_hidden()
+    if not is_hidden:
+        await handle.scroll_into_view_if_needed()
+    await handle.click(force=True)
     return f'Clicked on the element at label {index}'
 
 @Tool('Type Tool',params=Type)
@@ -30,7 +35,10 @@ async def type_tool(index:int,text:str,clear:Literal['True','False']='False',con
     element=await context.get_element_by_index(index=index)
     handle=await context.get_handle_by_xpath(element.xpath)
     await page.wait_for_load_state('load')
-    await handle.click()
+    is_hidden=await handle.is_hidden()
+    if not is_hidden:
+        await handle.scroll_into_view_if_needed()
+    await handle.click(force=True)
     if clear=='True':
         await page.keyboard.press('Control+A')
         await page.keyboard.press('Backspace')
@@ -50,10 +58,11 @@ async def scroll_tool(direction:Literal['up','down']='up',amount:int=None,contex
     page=await context.get_current_page()
     scroll_y_before = await context.execute_script(page,"() => window.scrollY")
     max_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight - window.innerHeight")
+    min_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight")
      # Check if scrolling is possible
     if scroll_y_before >= max_scroll_y and direction == 'down':
         return "Already at the bottom, cannot scroll further."
-    elif scroll_y_before == 0 and direction == 'up':
+    elif scroll_y_before == min_scroll_y and direction == 'up':
         return "Already at the top, cannot scroll further."
     if direction=='up':
         if amount is None:
@@ -71,7 +80,7 @@ async def scroll_tool(direction:Literal['up','down']='up',amount:int=None,contex
     scroll_y_after = await page.evaluate("() => window.scrollY")
     # Verify if scrolling was successful
     if scroll_y_before == scroll_y_after:
-        return "Scrolling had no effect, possibly already at the limit."
+        return "Scrolling has no effect, the entire content fits within the viewport."
     amount=amount if amount else 'one page'
     return f'Scrolled {direction} by {amount}'
 
@@ -79,9 +88,25 @@ async def scroll_tool(direction:Literal['up','down']='up',amount:int=None,contex
 async def goto_tool(url:str,context:Context=None):
     '''To navigate directly to a specified URL.'''
     page=await context.get_current_page()
-    await page.goto(url=url)
-    await page.wait_for_load_state('load')
+    await page.goto(url=url,wait_until='domcontentloaded')
     return f'Navigated to {url}'
+
+@Tool('Transcript Tool',params=Transcript)
+async def transcript_tool(url:str,context:Context=None):
+    'To get the transcript of YouTube video'
+    try:
+        url_obj = urlparse(url)
+        if url_obj.hostname in ('www.youtube.com', 'youtube.com'):
+            video_id = parse_qs(url_obj.query)['v'][0]
+        elif url_obj.hostname == 'youtu.be':
+            video_id = url_obj.path[1:]
+        else:
+            raise ValueError("Invalid YouTube URL")
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        full_transcript = " ".join([entry['text'] for entry in transcript])
+        return full_transcript
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
 
 @Tool('Back Tool',params=Back)
 async def back_tool(context:Context=None):
@@ -90,6 +115,14 @@ async def back_tool(context:Context=None):
     await page.go_back()
     await page.wait_for_load_state('load')
     return 'Navigated to previous page'
+
+@Tool('Forward Tool',params=Forward)
+async def forward_tool(context:Context=None):
+    '''Go forward to the next page'''
+    page=await context.get_current_page()
+    await page.go_forward()
+    await page.wait_for_load_state('load')
+    return 'Navigated to next page'
 
 @Tool('Key Tool',params=Key)
 async def key_tool(keys:str,times:int=1,context:Context=None):
@@ -108,7 +141,8 @@ async def download_tool(url:str=None,filename:str=None,context:Context=None):
         response=await client.get(url)
     path=folder_path.joinpath(filename)
     with open(path,'wb') as f:
-        f.write(response.content)
+        async for chunk in response.aiter_bytes():
+            f.write(chunk)
     return f'Downloaded {filename} from {url} and saved it to {path}'
 
 @Tool('Scrape Tool',params=Scrape)
@@ -118,7 +152,7 @@ async def scrape_tool(format:Literal['markdown','text']='markdown',context:Conte
     await page.wait_for_load_state('domcontentloaded')
     html=await page.content()
     content=MainContentExtractor.extract(html=html,include_links=True,output_format=format)
-    return f'Extracted Page Content:\n{content}'
+    return f'Scraped the contents of the entire webpage:\n{content}'
 
 @Tool('Tab Tool', params=Tab)
 async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional[int] = None, context: Context = None):
@@ -129,7 +163,7 @@ async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional
         page = await session.context.new_page()
         session.current_page = page
         await page.wait_for_load_state('load')
-        return 'Opened a new tab and switched to it.'
+        return 'Opened a new blank tab and switched to it.'
     elif mode == 'close':
         if len(pages) == 1:
             return 'Cannot close the last remaining tab.'
@@ -140,7 +174,7 @@ async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional
         session.current_page = pages[-1]  # Switch to last remaining tab
         await session.current_page.bring_to_front()
         await session.current_page.wait_for_load_state('load')
-        return f'Closed current tab and switched to the previous tab.'
+        return f'Closed current tab and switched to the next last tab.'
     elif mode == 'switch':
         if tab_index is None or tab_index < 0 or tab_index >= len(pages):
             raise IndexError(f'Tab index {tab_index} is out of range. Available tabs: {len(pages)}')
@@ -179,17 +213,3 @@ async def menu_tool(index:int,labels:list[str],context:Context=None):
     labels=labels if len(labels)>1 else labels[0]
     await handle.select_option(label=labels)
     return f'Opened context menu of element at label {index} and selected {', '.join(labels)}'
-
-@Tool('Form Tool',params=Form)
-async def form_tool(tool_names:list[Literal['Click Tool','Type Tool','Upload Tool','Menu Tool']],tool_inputs:list[dict],context:Context=None):
-    '''To fill input fields of application form'''
-    for tool_name,tool_input in zip(tool_names,tool_inputs):
-        if tool_name=='Click Tool':
-            await click_tool.async_invoke(index=tool_input['index'],context=context)
-        elif tool_name=='Type Tool':
-            await type_tool.async_invoke(index=tool_input['index'],text=tool_input.get('text'),context=context)
-        elif tool_name=='Upload Tool':
-            await upload_tool.async_invoke(index=tool_input['index'],filenames=tool_input.get('filenames'),context=context)
-        elif tool_name=='Menu Tool':
-            await menu_tool.async_invoke(index=tool_input['index'],labels=tool_input.get('labels'),context=context)
-    return f'Filled form with inputs {tool_inputs}'

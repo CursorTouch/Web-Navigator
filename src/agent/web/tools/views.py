@@ -6,7 +6,7 @@ class SharedBaseModel(BaseModel):
         extra="allow"
 
 class Done(SharedBaseModel):
-    answer:str = Field(...,description="the detailed final answer to the user query in proper markdown format",examples=["The task is completed successfully."])
+    content:str = Field(...,description="deliver the content for the user's query in proper markdown format",examples=["The task is completed successfully."])
 
 class Click(SharedBaseModel):
     index:int = Field(...,description="the index of the element to click",examples=[0])
@@ -21,12 +21,19 @@ class Wait(SharedBaseModel):
 
 class Scroll(SharedBaseModel):
     direction:Literal['up','down'] = Field(description="the direction to scroll",examples=['up'],default='up')
-    amount:int = Field(description="the amount to scroll, if None then page up or down",examples=[100],default=None)
+    amount:int = Field(description="the amount to scroll, if None then page up or down",examples=[100,250],default=None)
 
 class GoTo(SharedBaseModel):
     url:str = Field(...,description="the url to navigate to",examples=["https://www.example.com"])
 
+class Transcript(SharedBaseModel):
+    url:str = Field(...,description="the url of the YouTube video to get the transcript",examples=["https://www.youtube.com/watch?v=dQw4w9WgXcQ"])
+
+
 class Back(SharedBaseModel):
+    pass
+
+class Forward(SharedBaseModel):
     pass
 
 class Key(SharedBaseModel):
@@ -42,7 +49,7 @@ class Scrape(SharedBaseModel):
 
 class Tab(SharedBaseModel):
     mode:Literal['open','close','switch'] = Field(...,description="the mode of the tab",examples=['open'])
-    tab_index:int = Field(description="mention the index of the exisiting tab to switch, if mode is switch",examples=[0],default=None)
+    tab_index:int = Field(description="the index of the tab to switch to, if the mode is 'switch'",examples=[0],default=None)
 
 class Upload(SharedBaseModel):
     index:int = Field(...,description="the index of the element to upload file to",examples=[0])
@@ -51,7 +58,3 @@ class Upload(SharedBaseModel):
 class Menu(SharedBaseModel):
     index:int = Field(...,description="the index of the element to select from the dropdown menu",examples=[0])
     labels:list[str] = Field(...,description="list of labels to select from the dropdown menu",examples=["BMW"])
-
-class Form(SharedBaseModel):
-    tool_names:list[Literal['Click Tool','Type Tool','Upload Tool','Menu Tool']]=Field(...,description="list of tool names",examples=[['Type Tool','Type Tool','Type Tool','Menu Tool'],['Click Tool','Type Tool','Click Tool','Upload Tool']])
-    tool_inputs:list[dict]=Field(...,description="list of tool inputs",examples=[[{'index':2,'text':'John'},{'index':3,'text':'Doe'},{'index':5,'text':'hello world'},{'index':6,'labels':['BMW']}],[{'index':0},{'index':0,'text':'hello world'},{'index':0},{'index':0,'filenames':['file.txt']}]])

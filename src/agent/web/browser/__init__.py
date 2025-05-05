@@ -41,7 +41,7 @@ class Browser:
                 browser_instance=await self.playwright.chromium.connect(self.config.wss_url)
             else:
                 raise Exception('Invalid Browser Type')
-        elif self.config.browser_instance_dir is not None and self.config.user_data_dir is not None:
+        elif self.config.browser_instance_dir is not None:
             browser_instance=None
         else:
             if browser=='chrome':
