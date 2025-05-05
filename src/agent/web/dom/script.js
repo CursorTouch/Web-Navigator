@@ -20,12 +20,12 @@ const EXCLUDED_TAGS =new Set([
 
 const INTERACTIVE_ROLES =new Set([
     'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
-    'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'grid',
+    'slider', 'tab', 'tabpanel', 'textbox', 'combobox',
     'option', 'progressbar', 'scrollbar', 'searchbox','listbox',
     'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 
     'a-dropdown-button', 'click','menuitemcheckbox', 'menuitemradio', 
     'a-button-text', 'button-text', 'button-icon', 'button-icon-only',
-    'button-text-icon-only', 'dropdown', 'combobox','gridcell',
+    'button-text-icon-only', 'dropdown', 'combobox','gridcell','switch'
 ])
 
 const INFORMATIVE_ROLES = new Set([
@@ -40,7 +40,7 @@ const CURSOR_TYPES=new Set(["pointer", "move", "text", "grab", "cell"])
 const SAFE_ATTRIBUTES = new Set([
     'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
     'for','autocomplete','required','readonly','alt','title','src','data-testid','data-id','data-qa',
-    'data-cy','href','target','tabindex','class'
+    'data-cy','href','target','tabindex','class','data-tooltip'
 ]);
 
 const labels = [];
@@ -165,8 +165,10 @@ async function getElements(node=document.body) {
         };
         const hasDownload=element.hasAttribute('download');
         const hasClickHandler = hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
-        hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click");
-        return isPointer||hasClickHandler||hasDownload;
+        hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click")
+        const hasAttribute=hasAttributeWithValue("data-tooltip")||hasAttributeWithValue("data-qa")||hasAttributeWithValue("data-cy")
+        ||hasAttributeWithValue("data-id")||hasAttributeWithValue("data-testid");
+        return isPointer||hasClickHandler||hasDownload||hasAttribute;
     }
 
     function isElementCovered(element) {
@@ -226,10 +228,8 @@ async function getElements(node=document.body) {
 
                 const role = currentNode.getAttribute('role') || 'none';
                 const name = currentNode.getAttribute('aria-label') ||
-                currentNode.getAttribute('name') ||
-                currentNode.getAttribute('aria-labelledby') ||
-                currentNode.getAttribute('aria-describedby') ||
-                currentNode.innerText?.replace(/\s+/g, ' ').trim() || 'none';
+                currentNode.getAttribute('name') || currentNode.innerText?.replace(/\s+/g, ' ').trim() ||
+                currentNode.getAttribute('aria-labelledby') || currentNode.getAttribute('aria-describedby') || 'none';
                 // Skip elements with no role or name or explorable tags to avoid the idle elements
                 if(role !== 'none' || name !== 'none' || !EXPLORABLE_TAGS.has(tagName)){
                     interactiveElements.push({
