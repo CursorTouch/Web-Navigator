@@ -97,7 +97,7 @@ class Context:
                 script=f.read()
             await context.add_init_script(script)
         else:
-            args=['--no-sandbox','--disable-blink-features=AutomationControlled','--disable-blink-features=IdleDetection','--no-infobars']
+            args=['--disable-blink-features=AutomationControlled','--disable-blink-features=IdleDetection','--no-infobars']
             parameters=parameters|{
                 'headless':self.browser.config.headless,
                 'slow_mo':self.browser.config.slow_mo,

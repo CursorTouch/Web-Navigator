@@ -315,7 +315,7 @@ function mark_page(boxes) {
         boundingBox.style.top = `${top}px`;
         boundingBox.style.width = `${width}px`;
         boundingBox.style.height = `${height}px`;
-        boundingBox.style.outline = `2px dashed ${color}`;
+        boundingBox.style.outline = `2px solid ${color}`;
         boundingBox.style.pointerEvents = 'none';
         boundingBox.style.zIndex = '9999';
 
