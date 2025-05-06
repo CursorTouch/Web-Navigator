@@ -16,7 +16,7 @@ class DOM:
             selector_map={}
             with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
-            await sleep(1.25)
+            await sleep(0.75)
             page=await self.context.get_current_page()
             await page.wait_for_load_state('load')
             await self.context.execute_script(page,script)
@@ -29,7 +29,7 @@ class DOM:
                 await self.context.execute_script(page,'boxes=>{mark_page(boxes)}',list(boxes))
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
-                await sleep(5.0)
+                await sleep(0.5)
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
