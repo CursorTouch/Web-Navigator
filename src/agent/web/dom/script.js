@@ -169,7 +169,8 @@ async function getElements(node=document.body) {
         const hasAttribute=hasAttributeWithValue('data-testid')||hasAttributeWithValue('data-id')||hasAttributeWithValue('data-qa')||
         hasAttributeWithValue('data-cy')||hasAttributeWithValue('data-cypress')||hasAttributeWithValue('data-testid')||
         hasAttributeWithValue('data-id')||hasAttributeWithValue('data-tooltip')
-        return isPointer||hasClickHandler||hasDownload||hasAttribute;
+        const isContentEditable = element.isContentEditable;
+        return isPointer||hasClickHandler||hasDownload||hasAttribute||isContentEditable;
     }
 
     function isElementCovered(element) {
