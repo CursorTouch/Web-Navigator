@@ -1,7 +1,7 @@
 const INTERACTIVE_TAGS =new Set([
     'a', 'button', 'details', 'embed', 'input','option','canvas',
     'menu', 'menuitem', 'object', 'select', 'textarea', 'summary',
-    'dialog', 'banner','span'
+    'dialog', 'banner'
 ])
 
 const INFORMATIVE_TAGS=new Set([
@@ -168,9 +168,9 @@ async function getElements(node=document.body) {
         hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click")
         const hasAttribute=hasAttributeWithValue('data-testid')||hasAttributeWithValue('data-id')||hasAttributeWithValue('data-qa')||
         hasAttributeWithValue('data-cy')||hasAttributeWithValue('data-cypress')||hasAttributeWithValue('data-testid')||
-        hasAttributeWithValue('data-id')||hasAttributeWithValue('data-tooltip')
+        hasAttributeWithValue('data-id')||hasAttributeWithValue('data-tooltip')||hasAttributeWithValue('tabindex');
         const isContentEditable = element.isContentEditable;
-        return isPointer||hasClickHandler||hasDownload||hasAttribute||isContentEditable;
+        return isPointer||hasClickHandler||hasDownload||isContentEditable||hasAttribute;
     }
 
     function isElementCovered(element) {

@@ -5,9 +5,9 @@ from urllib.parse import urlparse, parse_qs
 from src.agent.web.context import Context
 from typing import Literal,Optional
 from src.tool import Tool
+from asyncio import sleep
 from pathlib import Path
 from os import getcwd
-import pyperclip as pc
 import httpx
     
 @Tool('Done Tool',params=Done)
@@ -48,8 +48,7 @@ async def type_tool(index:int,text:str,clear:Literal['True','False']='False',con
 @Tool('Wait Tool',params=Wait)
 async def wait_tool(time:int,context:Context=None):
     '''To wait until the page has fully loaded before proceeding'''
-    page=await context.get_current_page()
-    await page.wait_for_timeout(time*1000)
+    await sleep(time)
     return f'Waited for {time}s'
 
 @Tool('Scroll Tool',params=Scroll)

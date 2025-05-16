@@ -60,8 +60,8 @@ class Context:
     async def update_state(self,use_vision:bool=False):
         dom=DOM(self)
         screenshot,dom_state=await dom.get_state(use_vision=use_vision)
-        current_tab=await self.get_current_tab()
         tabs=await self.get_all_tabs()
+        current_tab=await self.get_current_tab()
         state=BrowserState(current_tab=current_tab,tabs=tabs,screenshot=screenshot,dom_state=dom_state)
         return state
     
@@ -97,12 +97,12 @@ class Context:
                 script=f.read()
             await context.add_init_script(script)
         else:
-            args=['--disable-blink-features=AutomationControlled','--disable-blink-features=IdleDetection','--no-infobars']
+            args=['--no-sandbox','--disable-blink-features=AutomationControlled','--disable-blink-features=IdleDetection','--no-infobars']
             parameters=parameters|{
                 'headless':self.browser.config.headless,
                 'slow_mo':self.browser.config.slow_mo,
                 'ignore_default_args': IGNORE_DEFAULT_ARGS,
-                'args': args,
+                'args': args+SECURITY_ARGS,
                 'user_data_dir': self.browser.config.user_data_dir,
                 'downloads_path': self.browser.config.downloads_dir,
                 'executable_path': self.browser.config.browser_instance_dir,
@@ -122,7 +122,17 @@ class Context:
     async def get_all_tabs(self)->list[Tab]:
         session=await self.get_session()
         pages=session.context.pages
-        return [Tab(index,page.url,await page.title(),page) for index,page in enumerate(pages)]
+        tabs:list[Tab]=[]
+        for id,page in enumerate(pages):
+            await page.wait_for_load_state('domcontentloaded')
+            try:
+                url=page.url
+                title=await page.title()
+            except Exception as e:
+                print(f'Tab failed to load: {e}')
+                continue
+            tabs.append(Tab(id=id,url=url,title=title,page=page))
+        return tabs
     
     async def get_current_tab(self)->Tab:
         tabs=await self.get_all_tabs()

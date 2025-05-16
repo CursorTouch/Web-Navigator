@@ -16,7 +16,7 @@ class DOM:
             selector_map={}
             with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
-            await sleep(0.75)
+            await sleep(0.5)
             page=await self.context.get_current_page()
             await page.wait_for_load_state('load')
             await self.context.execute_script(page,script)

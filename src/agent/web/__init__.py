@@ -22,7 +22,7 @@ main_tools=[
     click_tool,goto_tool,key_tool,download_tool,
     type_tool,scroll_tool,wait_tool,menu_tool,
     back_tool,tab_tool,done_tool,forward_tool,
-    transcript_tool
+    transcript_tool,scrape_tool
 ]
 
 class WebAgent(BaseAgent):
