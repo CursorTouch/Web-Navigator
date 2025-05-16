@@ -102,7 +102,7 @@ class Context:
                 'headless':self.browser.config.headless,
                 'slow_mo':self.browser.config.slow_mo,
                 'ignore_default_args': IGNORE_DEFAULT_ARGS,
-                'args': args+SECURITY_ARGS,
+                'args': args,
                 'user_data_dir': self.browser.config.user_data_dir,
                 'downloads_path': self.browser.config.downloads_dir,
                 'executable_path': self.browser.config.browser_instance_dir,

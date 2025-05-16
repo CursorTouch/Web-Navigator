@@ -27,7 +27,8 @@
 ### **Prerequisites**
 
 - Python 3.11 or higher
-- Playwright installed
+- Langgraph
+- Playwright
 
 ### **Installation Steps**
 
@@ -127,4 +128,4 @@ Contributions are welcome! Please see [CONTRIBUTING](CONTRIBUTING) for setup ins
 
 For queries or support, please reach out via GitHub Issues.
 
-E-mail: <jeogeoalukka@gmail.com>
+E-mail: <jeogeoalukka@gmail.com>, <yaseenap0001@gmail.com>

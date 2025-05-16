@@ -184,7 +184,6 @@ async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional
         return f'Switched to tab {tab_index} (Total tabs: {len(pages)}).'
     else:
         raise ValueError("Invalid mode. Use 'open', 'close', or 'switch'.")
-
     
 @Tool('Upload Tool',params=Upload)   
 async def upload_tool(index:int,filenames:list[str],context:Context=None):
@@ -203,7 +202,6 @@ async def upload_tool(index:int,filenames:list[str],context:Context=None):
         await handle.set_input_files(files=files[0])
     await page.wait_for_load_state('load')
     return f'Uploaded {filenames} to element at label {index}'
-
 
 @Tool('Menu Tool',params=Menu)
 async def menu_tool(index:int,labels:list[str],context:Context=None):
