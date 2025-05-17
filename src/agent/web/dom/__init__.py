@@ -15,7 +15,7 @@ class DOM:
         try:
             selector_map={}
             if freeze:
-                await sleep(10)
+                await sleep(5)
             with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
             page=await self.context.get_current_page()
@@ -50,6 +50,8 @@ class DOM:
             script=f.read()
         try:
             for index,frame in enumerate(frames):
+                if frame.is_detached():
+                    continue
                 # print(f"Getting elements from frame: {frame.url}")
                 await self.context.execute_script(frame,script)  # Inject JS
                 #index=0 means Main Frame
