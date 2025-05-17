@@ -1,7 +1,7 @@
 const INTERACTIVE_TAGS =new Set([
-    'a', 'button', 'details', 'embed', 'input','option','canvas',
-    'menu', 'menuitem', 'object', 'select', 'textarea', 'summary',
-    'dialog', 'banner'
+    'a', 'button', 'embed', 'input', 'option', 'canvas', 'summary',
+    'menu', 'menuitem', 'object', 'select', 'textarea', 'banner',
+    'dialog',
 ])
 
 const INFORMATIVE_TAGS=new Set([
@@ -11,7 +11,7 @@ const INFORMATIVE_TAGS=new Set([
 ])
 
 const EXPLORABLE_TAGS=new Set([
-    'div','span','article','section','nav','header','footer','main','ul','ol'
+    'div','span','article','section','nav','header','footer','main','ul','ol','details'
 ])
 
 const EXCLUDED_TAGS =new Set([
@@ -39,7 +39,7 @@ const CURSOR_TYPES=new Set(["pointer", "move", "text", "grab", "cell"])
 
 const SAFE_ATTRIBUTES = new Set([
     'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
-    'for','autocomplete','required','readonly','alt','title','src','data-testid','data-id','data-qa',
+    'for','autocomplete','required','readonly','alt','title','data-testid','data-id','data-qa',
     'data-cy','href','target','tabindex','class','data-tooltip'
 ]);
 
@@ -166,11 +166,12 @@ async function getElements(node=document.body) {
         const hasDownload=element.hasAttribute('download');
         const hasClickHandler = hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
         hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click")
+        const isLink=hasAttributeWithValue('target')||hasAttributeWithValue('href')
         const hasAttribute=hasAttributeWithValue('data-testid')||hasAttributeWithValue('data-id')||hasAttributeWithValue('data-qa')||
         hasAttributeWithValue('data-cy')||hasAttributeWithValue('data-cypress')||hasAttributeWithValue('data-testid')||
         hasAttributeWithValue('data-id')||hasAttributeWithValue('data-tooltip')||hasAttributeWithValue('tabindex');
         const isContentEditable = element.isContentEditable;
-        return isPointer||hasClickHandler||hasDownload||isContentEditable||hasAttribute;
+        return isPointer||hasClickHandler||isLink||hasDownload||isContentEditable||hasAttribute;
     }
 
     function isElementCovered(element) {
@@ -200,7 +201,8 @@ async function getElements(node=document.body) {
         if (EXCLUDED_TAGS.has(tagName)) return;
 
         const role = currentNode.getAttribute('role');
-        const hasInteractiveTag = INTERACTIVE_TAGS.has(tagName);
+        // Checks for standard and non-standard interactive elements
+        const hasInteractiveTag = INTERACTIVE_TAGS.has(tagName) || tagName.split('-').some(part => INTERACTIVE_TAGS.has(part));
         const hasInteractiveRole = role && INTERACTIVE_ROLES.has(role);
 
         // Get Interactive Elements
@@ -286,7 +288,10 @@ async function getElements(node=document.body) {
                 });
             }
         }
-        
+        // const shadowRoot=currentNode.shadowRoot
+        // if(shadowRoot!==null){
+        //     shadowRoot.childNodes.forEach(child => traverseDom(child));
+        // }
         if (!isClickable || EXPLORABLE_TAGS.has(tagName)) {
             Array.from(currentNode.children).forEach(child => traverseDom(child));
         }

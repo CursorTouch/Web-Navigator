@@ -10,15 +10,16 @@ class DOM:
     def __init__(self, context:'Context'):
         self.context=context
 
-    async def get_state(self,use_vision:bool=False)->tuple[str|None,DOMState]:
+    async def get_state(self,use_vision:bool=False,freeze:bool=False)->tuple[str|None,DOMState]:
         '''Get the state of the webpage.'''
         try:
             selector_map={}
+            if freeze:
+                await sleep(10)
             with open('./src/agent/web/dom/script.js') as f:
                 script=f.read()
-            await sleep(0.5)
             page=await self.context.get_current_page()
-            await page.wait_for_load_state('load')
+            await page.wait_for_load_state('domcontentloaded',timeout=10*1000)
             await self.context.execute_script(page,script)
             #Access from frames
             frames=page.frames
@@ -29,7 +30,9 @@ class DOM:
                 await self.context.execute_script(page,'boxes=>{mark_page(boxes)}',list(boxes))
                 screenshot=await self.context.get_screenshot(save_screenshot=False)
                 # Remove bounding boxes from the interactive elements
-                await sleep(0.5)
+                if freeze:
+                    await sleep(10)
+                await sleep(0.1)
                 await self.context.execute_script(page,'unmark_page()')
             else:
                 screenshot=None
