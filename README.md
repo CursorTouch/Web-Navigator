@@ -9,8 +9,8 @@
   <img src="https://img.shields.io/badge/Powered%20by-Playwright-45ba63?logo=playwright&logoColor=white" alt="Powered by Playwright">
   <br>
 
-  <a href="https://x.com/computeraiagent">
-    <img src="https://img.shields.io/badge/follow-%40computeraiagent-1DA1F2?logo=twitter&style=flat" alt="Follow on Twitter">
+  <a href="https://x.com/CursorTouch">
+    <img src="https://img.shields.io/badge/follow-%40CursorTouch-1DA1F2?logo=twitter&style=flat" alt="Follow on Twitter">
   </a>
   <a href="https://discord.com/invite/Aue9Yj2VzS">
     <img src="https://img.shields.io/badge/Join%20on-Discord-5865F2?logo=discord&logoColor=white&style=flat" alt="Join us on Discord">

@@ -109,7 +109,7 @@ class WebAgent(BaseAgent):
             'interactive_elements':browser_state.dom_state.interactive_elements_to_string(),
             'informative_elements':browser_state.dom_state.informative_elements_to_string()
         })
-        messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision else HumanMessage(observation_prompt)]
+        messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision and image_obj is not None else HumanMessage(observation_prompt)]
         return {**state,'messages':messages,'prev_observation':observation}
 
     async def answer(self,state:AgentState):

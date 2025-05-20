@@ -229,8 +229,8 @@ const INFORMATIVE_ROLES = new Set([
                     const role = currentNode.getAttribute('role') || 'none';
                     const name = currentNode.getAttribute('name') || currentNode.getAttribute('aria-label') || currentNode.getAttribute('title') ||
                     currentNode.getAttribute('aria-labelledby') || currentNode.getAttribute('aria-describedby') || 
-                    currentNode.getAttribute('label') ||currentNode.innerText?.trim() || 'none';
-                    if((role!=='none' || name!=='none') && !interactiveElements.find((element) => element.name === name)){
+                    currentNode.getAttribute('label') || currentNode.innerText?.trim() || 'none';
+                    if((role!=='none' || name!=='none')){
                         interactiveElements.push({
                             tag: tagName,
                             role: role,  // Default to 'none' if no role is found
