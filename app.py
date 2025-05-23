@@ -13,11 +13,11 @@ browser_instance_dir=os.getenv('BROWSER_INSTANCE_DIR')
 user_data_dir=os.getenv('USER_DATA_DIR')
 
 # LLMs used
-llm=ChatGemini(model='gemini-2.0-flash',api_key=google_api_key,temperature=0)
+llm=ChatGemini(model='gemini-2.5-flash-preview-04-17',api_key=google_api_key,temperature=0)
 speech_llm=AudioGroq(model='whisper-large-v3',mode='translations',api_key=groq_api_key,temperature=0)
 
 config=BrowserConfig(browser='chrome',browser_instance_dir=None,user_data_dir=None,headless=False)
-agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=True,max_iteration=100,token_usage=False)
+agent=WebAgent(config=config,instructions=[],llm=llm,verbose=True,use_vision=True,max_iteration=100,token_usage=True)
 
 mode=input('Enter the mode of input (text/voice): ')
 if mode=='text':

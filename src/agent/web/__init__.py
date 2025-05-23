@@ -14,6 +14,7 @@ from datetime import datetime
 from termcolor import colored
 from src.tool import Tool
 from pathlib import Path
+import textwrap
 import platform
 import asyncio
 import json
@@ -81,7 +82,7 @@ class WebAgent(BaseAgent):
         action_result=await self.registry.async_execute(action_name,action_input,context=self.context)
         observation=action_result.content
         if self.verbose:
-            print(colored(f'Observation: {observation}',color='green',attrs=['bold']))
+            print(colored(f'Observation: {textwrap.shorten(observation,width=500)}',color='green',attrs=['bold']))
         state['messages'].pop() # Remove the last message for modification
         last_message=state['messages'][-1] # ImageMessage/HumanMessage
         if isinstance(last_message,(ImageMessage,HumanMessage)):

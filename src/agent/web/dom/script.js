@@ -13,63 +13,63 @@ const EXPLORABLE_TAGS=new Set([
     'div','span','article','section','nav','header','footer','main','ul','ol','details'
 ])
 
-    const EXCLUDED_TAGS =new Set([
-        'style', 'script', 'noscript','link','meta'
-    ])
+const EXCLUDED_TAGS =new Set([
+    'style', 'script', 'noscript','link','meta'
+])
 
-    const INTERACTIVE_ROLES =new Set([
-        'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
-        'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'gridcell',
-        'option', 'progressbar', 'scrollbar', 'searchbox','listbox',
-        'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 
-        'a-dropdown-button', 'click','menuitemcheckbox', 'menuitemradio', 
-        'a-button-text', 'button-text', 'button-icon', 'button-icon-only',
-        'button-text-icon-only', 'dropdown', 'combobox','switch'
-    ])
+const INTERACTIVE_ROLES =new Set([
+    'button', 'menu', 'menuitem', 'link', 'checkbox', 'radio',
+    'slider', 'tab', 'tabpanel', 'textbox', 'combobox', 'gridcell',
+    'option', 'progressbar', 'scrollbar', 'searchbox','listbox',
+    'switch', 'tree', 'treeitem', 'spinbutton', 'tooltip', 'a-button-inner', 
+    'a-dropdown-button', 'click','menuitemcheckbox', 'menuitemradio', 
+    'a-button-text', 'button-text', 'button-icon', 'button-icon-only',
+    'button-text-icon-only', 'dropdown', 'combobox','switch'
+])
 
 const INFORMATIVE_ROLES = new Set([
     'article','document','heading','note',
     'definition','paragraph','contentinfo',
     'status','alert','log','tooltip','text',
     'term','region','presentation'
-  ]);
+]);
 
-    const CURSOR_TYPES=new Set(["pointer", "move", "text", "grab", "cell"])
+const CURSOR_TYPES=new Set(["pointer", "move", "text", "grab", "cell"])
 
-    const SAFE_ATTRIBUTES = new Set([
-        'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
-        'for','autocomplete','required','readonly','alt','title','data-testid','data-id','data-qa',
-        'data-cy','href','target','tabindex','class','data-tooltip'
-    ]);
+const SAFE_ATTRIBUTES = new Set([
+    'name','type','value','placeholder','label','aria-label','aria-labelledby','aria-describedby','role',
+    'for','autocomplete','required','readonly','alt','title','data-testid','data-id','data-qa',
+    'data-cy','href','target','tabindex','class','data-tooltip'
+]);
 
-    const labels = [];
+const labels = [];
 
-    async function injectAllCSS() {
-        const stylesheets = document.styleSheets;
-        let allCSS = ""; // Store all CSS content
+async function injectAllCSS() {
+    const stylesheets = document.styleSheets;
+    let allCSS = ""; // Store all CSS content
         
-        let fetchPromises = Array.from(stylesheets).map(async (stylesheet) => {
-            if (stylesheet.href) {
-                try {
-                    let response = await fetch(stylesheet.href);
-                    if (response.ok) {
-                        let text = await response.text();
+    let fetchPromises = Array.from(stylesheets).map(async (stylesheet) => {
+        if (stylesheet.href) {
+            try {
+                let response = await fetch(stylesheet.href);
+                if (response.ok) {
+                    let text = await response.text();
                         allCSS += `\\n/* ${stylesheet.href} */\\n` + text; // Append fetched CSS
-                    }
-                } catch (error) {
-                    console.error('Error fetching CSS:', stylesheet.href, error);
                 }
+            } catch (error) {
+                console.error('Error fetching CSS:', stylesheet.href, error);
             }
-        });
-        // Wait for all fetches to complete
-        await Promise.all(fetchPromises);
-        // Inject into a single <style> tag
-        if (allCSS.trim()) {
-            const styleElement = document.createElement('style');
-            styleElement.textContent = allCSS;
-            document.head.appendChild(styleElement);
         }
+    });
+        // Wait for all fetches to complete
+    await Promise.all(fetchPromises);
+    // Inject into a single <style> tag
+    if (allCSS.trim()) {
+        const styleElement = document.createElement('style');
+        styleElement.textContent = allCSS;
+        document.head.appendChild(styleElement);
     }
+}
 
     function getXPath(element) {
         if (!element || element.nodeType !== Node.ELEMENT_NODE) return "";
@@ -162,12 +162,12 @@ const INFORMATIVE_ROLES = new Set([
                 const value = element.getAttribute(attr);
                 return value !== null && value.trim().length > 0;
             };
-            const isClickable = isPointer || hasAttributeWithValue('onclick') || hasAttributeWithValue('v-on:click') ||
-            hasAttributeWithValue('@click') || hasAttributeWithValue("ng-click");
-            const isLink=hasAttributeWithValue('href')||hasAttributeWithValue('download')
-            const isContentEditable = element.isContentEditable;
-            const hasAttribute=hasAttributeWithValue('data-tooltip')||hasAttributeWithValue('data-testid')
-            return isClickable||isLink||isContentEditable||hasAttribute
+            const isClickable = isPointer || Array('onclick', 'v-on:click', '@click', "ng-click").some(e=>hasAttributeWithValue(e));
+            const hasEvents= Array('onfocus', 'onblur', 'onchange', 'oninput', 'onkeydown', 'onkeyup', 'onmousedown', 'onmouseup').some(e=>hasAttributeWithValue(e))
+            const isLink=Array('href', 'download').some(e=>hasAttributeWithValue(e))
+            const isContentEditable = element.isContentEditable|| element.hasAttribute('contenteditable')==='true';
+            const hasAttribute=Array('data-tooltip', 'data-testid').some(e=>hasAttributeWithValue(e))
+            return isClickable||isLink||isContentEditable||hasAttribute||hasEvents
         }
 
         function isElementCovered(element) {
