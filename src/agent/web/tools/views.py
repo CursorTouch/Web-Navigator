@@ -58,3 +58,10 @@ class Upload(SharedBaseModel):
 class Menu(SharedBaseModel):
     index:int = Field(...,description="the index of the element to select from the dropdown menu",examples=[0])
     labels:list[str] = Field(...,description="list of labels to select from the dropdown menu",examples=["BMW"])
+
+# Add this new class
+class HumanInput(SharedBaseModel):
+    prompt: str = Field(..., description="The question or prompt to ask the human for input.", examples=["What should I search for on Amazon?", 
+                                                                                                         "Please enter the OTP displayed on your device.", 
+                                                                                                         "Please help me with the next step.",
+                                                                                                          "Please give me the login credentials"])
