@@ -1,15 +1,17 @@
-from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward,Transcript
+# src/agent/web/tools/__init__.py
+from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward, HumanInput # Import HumanInput
 from main_content_extractor import MainContentExtractor
-from youtube_transcript_api import YouTubeTranscriptApi
+#from youtube_transcript_api import YouTubeTranscriptApi
 from urllib.parse import urlparse, parse_qs
 from src.agent.web.context import Context
 from typing import Literal,Optional
+from termcolor import colored # Import colored for better output
 from src.tool import Tool
 from asyncio import sleep
 from pathlib import Path
 from os import getcwd
 import httpx
-    
+
 @Tool('Done Tool',params=Done)
 async def done_tool(content:str,context:Context=None):
     '''To indicate that the task is completed'''
@@ -90,7 +92,7 @@ async def goto_tool(url:str,context:Context=None):
     await page.goto(url=url,wait_until='domcontentloaded')
     return f'Navigated to {url}'
 
-@Tool('Transcript Tool',params=Transcript)
+'''@Tool('Transcript Tool',params=Transcript)
 async def transcript_tool(url:str,context:Context=None):
     'To get the transcript of YouTube video'
     try:
@@ -105,7 +107,7 @@ async def transcript_tool(url:str,context:Context=None):
         full_transcript = " ".join([entry['text'] for entry in transcript])
         return full_transcript
     except Exception as e:
-        return f"An error occurred: {str(e)}"
+        return f"An error occurred: {str(e)}"'''
 
 @Tool('Back Tool',params=Back)
 async def back_tool(context:Context=None):
@@ -169,7 +171,7 @@ async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional
         page = session.current_page
         await page.close()
         # Get remaining pages after closing
-        pages = session.context.pages  
+        pages = session.context.pages
         session.current_page = pages[-1]  # Switch to last remaining tab
         await session.current_page.bring_to_front()
         await session.current_page.wait_for_load_state('load')
@@ -183,8 +185,8 @@ async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional
         return f'Switched to tab {tab_index} (Total tabs: {len(pages)}).'
     else:
         raise ValueError("Invalid mode. Use 'open', 'close', or 'switch'.")
-    
-@Tool('Upload Tool',params=Upload)   
+
+@Tool('Upload Tool',params=Upload)
 async def upload_tool(index:int,filenames:list[str],context:Context=None):
     '''To upload files to an element in the webpage'''
     element=await context.get_element_by_index(index=index)
@@ -210,3 +212,11 @@ async def menu_tool(index:int,labels:list[str],context:Context=None):
     labels=labels if len(labels)>1 else labels[0]
     await handle.select_option(label=labels)
     return f'Opened context menu of element at label {index} and selected {', '.join(labels)}'
+
+# Add this new tool function
+@Tool('Human Tool',params=HumanInput)
+async def human_tool(prompt:str,context:Context=None):
+    '''To ask a human for input or assistance when stuck (e.g., OTP, CAPTCHA), unsure, or explicitly asked to.'''
+    print(colored(f"\n🤖 Agent: {prompt}", color='cyan', attrs=['bold']))
+    human_response = input("🧑 Human: ")
+    return f"Human provided the following input: '{human_response}'"

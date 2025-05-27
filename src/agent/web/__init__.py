@@ -1,4 +1,9 @@
-from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,forward_tool,menu_tool,done_tool,transcript_tool
+# src/agent/web/__init__.py
+from src.agent.web.tools import (
+    click_tool, goto_tool, type_tool, scroll_tool, wait_tool, back_tool,
+    key_tool, scrape_tool, download_tool, tab_tool, forward_tool,
+    menu_tool, done_tool, human_tool # Import human_tool
+)
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -18,12 +23,13 @@ import textwrap
 import platform
 import asyncio
 import json
+import re
 
 main_tools=[
     click_tool,goto_tool,key_tool,download_tool,
     type_tool,scroll_tool,wait_tool,menu_tool,
     back_tool,tab_tool,done_tool,forward_tool,
-    transcript_tool,scrape_tool
+    scrape_tool, human_tool # Add human_tool here
 ]
 
 class WebAgent(BaseAgent):
@@ -79,7 +85,13 @@ class WebAgent(BaseAgent):
         if self.verbose:
             print(colored(f'Action Name: {action_name}',color='blue',attrs=['bold']))
             print(colored(f'Action Input: {action_input}',color='blue',attrs=['bold']))
-        action_result=await self.registry.async_execute(action_name,action_input,context=self.context)
+
+        # Special handling for Human Tool - no context needed
+        if action_name == 'Human Tool':
+             action_result = await self.registry.async_execute(action_name, action_input, context=None)
+        else:
+             action_result=await self.registry.async_execute(action_name,action_input,context=self.context)
+
         observation=action_result.content
         if self.verbose:
             print(colored(f'Observation: {textwrap.shorten(observation,width=500)}',color='green',attrs=['bold']))
@@ -89,10 +101,29 @@ class WebAgent(BaseAgent):
             state['messages'][-1]=HumanMessage(f'<Observation>{state.get('prev_observation')}</Observation>')
         if self.verbose and self.token_usage:
             print(f'Input Tokens: {self.llm.tokens.input} Output Tokens: {self.llm.tokens.output} Total Tokens: {self.llm.tokens.total}')
-        # Get the current browser state
-        browser_state=await self.context.get_state(use_vision=self.use_vision)
-        image_obj=browser_state.screenshot
-        current_tab=browser_state.current_tab
+
+        # Get the current browser state only if not using Human Tool
+        if action_name != 'Human Tool':
+            browser_state=await self.context.get_state(use_vision=self.use_vision)
+            image_obj=browser_state.screenshot
+            current_tab=browser_state.current_tab
+            tabs_info = browser_state.tabs_to_string()
+            interactive_elements = browser_state.dom_state.interactive_elements_to_string()
+            informative_elements = browser_state.dom_state.informative_elements_to_string()
+        else: # If Human Tool was used, don't update browser state, just pass the human response
+            image_obj = None
+            # Keep previous tab/element info or set to a 'waiting' state
+            current_tab_state = state.get('messages')[-1].content
+            current_tab_match = re.search(r"Current Tab: (.*?)\n", current_tab_state)
+            tabs_match = re.search(r"Open Tabs:\n(.*?)\n\[End of Tab Info\]", current_tab_state, re.DOTALL)
+            interactive_match = re.search(r"List of Interactive Elements:\n(.*?)\n", current_tab_state, re.DOTALL)
+            informative_match = re.search(r"List of Informative Elements:\n(.*?)\n\[End of Viewport\]", current_tab_state, re.DOTALL)
+
+            current_tab = current_tab_match.group(1).strip() if current_tab_match else "N/A"
+            tabs_info = tabs_match.group(1).strip() if tabs_match else "N/A"
+            interactive_elements = interactive_match.group(1).strip() if interactive_match else "N/A"
+            informative_elements = informative_match.group(1).strip() if informative_match else "N/A"
+
         # Redefining the AIMessage and adding the new observation
         action_prompt=self.action_prompt.format(**{
             'memory':memory,
@@ -105,10 +136,10 @@ class WebAgent(BaseAgent):
             'iteration':self.iteration,
             'max_iteration':self.max_iteration,
             'observation':observation,
-            'current_tab':current_tab.to_string(),
-            'tabs':browser_state.tabs_to_string(),
-            'interactive_elements':browser_state.dom_state.interactive_elements_to_string(),
-            'informative_elements':browser_state.dom_state.informative_elements_to_string()
+            'current_tab':current_tab if isinstance(current_tab, str) else current_tab.to_string(), # Handle both string and Tab object
+            'tabs':tabs_info,
+            'interactive_elements':interactive_elements,
+            'informative_elements':informative_elements
         })
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision and image_obj is not None else HumanMessage(observation_prompt)]
         return {**state,'messages':messages,'prev_observation':observation}
@@ -145,7 +176,7 @@ class WebAgent(BaseAgent):
         if self.verbose:
             print(colored(f'Final Answer: {final_answer}',color='cyan',attrs=['bold']))
         return {**state,'output':final_answer,'messages':messages}
-    
+
     def structured(self,state:AgentState):
         "Give the structured output"
         messages=[SystemMessage('## Structured Output'),HumanMessage(state.get('output'))]
@@ -161,7 +192,7 @@ class WebAgent(BaseAgent):
             if action_name!='Done Tool':
                 return 'action'
         return 'answer'
-        
+
     def output_controller(self,state:AgentState):
         if self.structured_output:
             return 'structured'
@@ -183,7 +214,7 @@ class WebAgent(BaseAgent):
         graph.add_edge('structured',END)
 
         return graph.compile(debug=False)
-    
+
     async def async_invoke(self, input: str, structured_output:BaseModel=None)->dict|BaseModel:
         self.iteration=0
         self.structured_output=structured_output
@@ -208,7 +239,8 @@ class WebAgent(BaseAgent):
             'input':input,
             'agent_data':{},
             'output':'',
-            'messages':messages
+            'messages':messages,
+            'prev_observation': 'Initial state, no observation yet.' # Added prev_observation
         }
         self.start_time=datetime.now()
         response=await self.graph.ainvoke(state,config={'recursion_limit':self.max_iteration})
@@ -222,12 +254,18 @@ class WebAgent(BaseAgent):
         if self.memory:
             self.memory.store(response.get('messages'))
         return response
-        
+
     def invoke(self, input: str,structured_output:BaseModel=None)->dict|BaseModel:
         if self.verbose:
             print(f'Entering '+colored(self.name,'black','on_white'))
         try:
-            loop=asyncio.get_event_loop()
+            # Check if an event loop is already running
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
             response=loop.run_until_complete(self.async_invoke(input=input,structured_output=structured_output))
         except RuntimeError as e:
             print('RuntimeError:',e)
@@ -236,18 +274,17 @@ class WebAgent(BaseAgent):
             'output':f'Error: {e}',
             'messages':[]}
         return response
-    
+
     async def close(self):
         '''Close the browser and context followed by clean up'''
         try:
             await self.context.close_session()
             await self.browser.close_browser()
         except Exception as e:
-            print('Failed to finish clean up')
+            print('Failed to finish clean up', e) # Added error printing
         finally:
             self.context=None
             self.browser=None
 
     def stream(self, input:str):
         pass
-
