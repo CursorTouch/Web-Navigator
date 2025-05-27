@@ -26,10 +26,6 @@ class Scroll(SharedBaseModel):
 class GoTo(SharedBaseModel):
     url:str = Field(...,description="the url to navigate to",examples=["https://www.example.com"])
 
-class Transcript(SharedBaseModel):
-    url:str = Field(...,description="the url of the YouTube video to get the transcript",examples=["https://www.youtube.com/watch?v=dQw4w9WgXcQ"])
-
-
 class Back(SharedBaseModel):
     pass
 
@@ -57,11 +53,7 @@ class Upload(SharedBaseModel):
 
 class Menu(SharedBaseModel):
     index:int = Field(...,description="the index of the element to select from the dropdown menu",examples=[0])
-    labels:list[str] = Field(...,description="list of labels to select from the dropdown menu",examples=["BMW"])
+    labels:list[str] = Field(...,description="list of labels to select from the dropdown menu",examples=[["BMW"]])
 
-# Add this new class
 class HumanInput(SharedBaseModel):
-    prompt: str = Field(..., description="The question or prompt to ask the human for input.", examples=["What should I search for on Amazon?", 
-                                                                                                         "Please enter the OTP displayed on your device.", 
-                                                                                                         "Please help me with the next step.",
-                                                                                                          "Please give me the login credentials"])
+    prompt: str = Field(..., description="The question to ask the user for input", examples=["Please enter the OTP displayed on your device.", "Please give me the login credentials"])

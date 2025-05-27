@@ -1,11 +1,8 @@
-# src/agent/web/tools/__init__.py
-from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward, HumanInput # Import HumanInput
+from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward, HumanInput
 from main_content_extractor import MainContentExtractor
-#from youtube_transcript_api import YouTubeTranscriptApi
-from urllib.parse import urlparse, parse_qs
 from src.agent.web.context import Context
 from typing import Literal,Optional
-from termcolor import colored # Import colored for better output
+from termcolor import colored
 from src.tool import Tool
 from asyncio import sleep
 from pathlib import Path
@@ -91,23 +88,6 @@ async def goto_tool(url:str,context:Context=None):
     page=await context.get_current_page()
     await page.goto(url=url,wait_until='domcontentloaded')
     return f'Navigated to {url}'
-
-'''@Tool('Transcript Tool',params=Transcript)
-async def transcript_tool(url:str,context:Context=None):
-    'To get the transcript of YouTube video'
-    try:
-        url_obj = urlparse(url)
-        if url_obj.hostname in ('www.youtube.com', 'youtube.com'):
-            video_id = parse_qs(url_obj.query)['v'][0]
-        elif url_obj.hostname == 'youtu.be':
-            video_id = url_obj.path[1:]
-        else:
-            raise ValueError("Invalid YouTube URL")
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        full_transcript = " ".join([entry['text'] for entry in transcript])
-        return full_transcript
-    except Exception as e:
-        return f"An error occurred: {str(e)}"'''
 
 @Tool('Back Tool',params=Back)
 async def back_tool(context:Context=None):
@@ -217,6 +197,6 @@ async def menu_tool(index:int,labels:list[str],context:Context=None):
 @Tool('Human Tool',params=HumanInput)
 async def human_tool(prompt:str,context:Context=None):
     '''To ask a human for input or assistance when stuck (e.g., OTP, CAPTCHA), unsure, or explicitly asked to.'''
-    print(colored(f"\n🤖 Agent: {prompt}", color='cyan', attrs=['bold']))
-    human_response = input("🧑 Human: ")
-    return f"Human provided the following input: '{human_response}'"
+    print(colored(f"Agent: {prompt}", color='cyan', attrs=['bold']))
+    human_response = input("User: ")
+    return f"User provided the following input: '{human_response}'"
