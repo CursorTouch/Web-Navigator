@@ -10,7 +10,7 @@ const INFORMATIVE_TAGS=new Set([
 ])
 
 const EXPLORABLE_TAGS=new Set([
-    'div','span','article','section','nav','header','footer','main','ul','ol','details'
+    'div','span','article','section','nav','header','footer','main','ul','ol','details','form'
 ])
 
 const EXCLUDED_TAGS =new Set([
