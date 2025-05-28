@@ -166,7 +166,7 @@ async function injectAllCSS() {
             const hasEvents= Array('onfocus', 'onblur', 'onchange', 'oninput', 'onkeydown', 'onkeyup', 'onmousedown', 'onmouseup').some(e=>hasAttributeWithValue(e))
             const isLink=Array('href', 'download').some(e=>hasAttributeWithValue(e))
             const isContentEditable = element.isContentEditable|| element.hasAttribute('contenteditable')==='true';
-            const hasAttribute=Array('data-tooltip', 'data-testid').some(e=>hasAttributeWithValue(e))
+            const hasAttribute=Array('data-tooltip', 'data-testid','title').some(e=>hasAttributeWithValue(e))
             return isClickable||isLink||isContentEditable||hasAttribute||hasEvents
         }
 
