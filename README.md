@@ -113,6 +113,8 @@ This project is licensed under MIT License - see the [LICENSE](LICENSE) file for
 
 Contributions are welcome! Please see [CONTRIBUTING](CONTRIBUTING) for setup instructions and development guidelines.
 
+Made with ❤️ by [Jeomon George](https://github.com/Jeomon), [Muhammad Yaseen](https://github.com/mhmdyaseen)
+
 ---
 
 ## 📒References
@@ -121,11 +123,3 @@ Contributions are welcome! Please see [CONTRIBUTING](CONTRIBUTING) for setup ins
 - **[LangGraph Examples](https://github.com/langchain-ai/langgraph/blob/main/examples/web-navigation/web_voyager.ipynb)**  
 - **[vimGPT](https://github.com/ishan0102/vimGPT)**  
 - **[WebVoyager](https://github.com/MinorJerry/WebVoyager)**  
-
----
-
-## 🤙🏾Contact
-
-For queries or support, please reach out via GitHub Issues.
-
-E-mail: <jeogeoalukka@gmail.com>, <yaseenap0001@gmail.com>
