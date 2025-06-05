@@ -122,6 +122,13 @@ async function injectAllCSS() {
             onScreen;
         }
 
+        function isElementScrollable(element) {
+            const style = window.getComputedStyle(element);
+            const isOverflow = style.overflow === 'scroll' || style.overflowY === 'scroll';
+            const isScrollable = element.scrollHeight > element.clientHeight;
+            return isOverflow && isScrollable;
+        }
+
         function isElementInViewport(element) {
             if (!element || element.offsetParent === null) {
                 return false; // Hidden elements (display: none)
@@ -204,7 +211,8 @@ async function injectAllCSS() {
             // Get Interactive Elements
             const isClickable =isElementClickable(currentNode) || hasInteractiveTag || hasInteractiveRole
             const isVisible = isElementVisible(currentNode) && isElementInViewport(currentNode)
-            if (isClickable && isVisible) {
+            const isScrollable = isElementScrollable(currentNode)
+            if ((isClickable && isVisible) || isScrollable) {
                 // Check if the element is covered by another element
                 const isCovered = !isElementCovered(currentNode);
                 if (isCovered) {
