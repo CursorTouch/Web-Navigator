@@ -12,6 +12,7 @@ from src.agent import BaseAgent
 from pydantic import BaseModel
 from datetime import datetime
 from termcolor import colored
+from textwrap import dedent
 from src.tool import Tool
 from pathlib import Path
 import textwrap
@@ -20,10 +21,9 @@ import asyncio
 import json
 
 main_tools=[
-    click_tool,goto_tool,key_tool,download_tool,
+    click_tool,goto_tool,key_tool,scrape_tool,
     type_tool,scroll_tool,wait_tool,menu_tool,
-    back_tool,tab_tool,done_tool,forward_tool,
-    scrape_tool
+    back_tool,tab_tool,done_tool,forward_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -167,8 +167,8 @@ class WebAgent(BaseAgent):
     def structured(self,state:AgentState):
         "Give the structured output"
         messages=[SystemMessage('## Structured Output'),HumanMessage(state.get('output'))]
-        structured_output=self.llm.invoke(messages=messages,model=self.structured_output)
-        return {**state,'output':structured_output}
+        output=self.llm.invoke(messages=messages,model=self.structured_output)
+        return {**state,'output':output}
 
     def main_controller(self,state:AgentState):
         "Route to the next node"
@@ -179,8 +179,9 @@ class WebAgent(BaseAgent):
             if action_name!='Done Tool':
                 return 'action'
         return 'answer'
-        
+
     def output_controller(self,state:AgentState):
+        "Route to the next node"
         if self.structured_output:
             return 'structured'
         else:
@@ -217,6 +218,17 @@ class WebAgent(BaseAgent):
             'home_dir':Path.home().as_posix(),
             'downloads_dir':self.browser.config.downloads_dir
         })
+        if structured_output:
+            system_prompt=dedent(f'''
+            {system_prompt}
+
+            ## Information to Collect from the Web
+
+            Gather the information based on the following structure.
+
+            {structured_output}
+            ''')
+
         # Attach memory layer to the system prompt
         if self.memory and self.memory.retrieve(input):
             system_prompt=self.memory.attach_memory(system_prompt)
