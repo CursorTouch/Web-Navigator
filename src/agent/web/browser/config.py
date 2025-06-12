@@ -5,6 +5,7 @@ from typing import Literal
 class BrowserConfig:
     headless:bool=False
     wss_url:str=None
+    device:str=None
     browser_instance_dir:str=None
     downloads_dir:str=None
     browser:Literal['chrome','firefox','edge']='edge'

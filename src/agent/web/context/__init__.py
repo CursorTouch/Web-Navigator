@@ -83,14 +83,18 @@ class Context:
         return session.current_page
         
     async def setup_context(self,browser:PlaywrightBrowser|None=None)->PlaywrightContext:
-        parameters={
-            'ignore_https_errors':self.config.disable_security,
-            'user_agent':self.config.user_agent,
-            'bypass_csp':self.config.disable_security,
-            'java_script_enabled':True,
-            'accept_downloads':True,
-            'no_viewport':True
-        }
+        if self.browser.config.device is not None:
+            parameters={**self.browser.playwright.devices.get(self.browser.config.device)}
+            parameters.pop('default_browser_type',None)
+        else:
+            parameters={
+                'ignore_https_errors':self.config.disable_security,
+                'user_agent':self.config.user_agent,
+                'bypass_csp':self.config.disable_security,
+                'java_script_enabled':True,
+                'accept_downloads':True,
+                'no_viewport':True
+            }
         if browser is not None:
             context=await browser.new_context(**parameters)
             with open('./src/agent/web/context/script.js') as f:

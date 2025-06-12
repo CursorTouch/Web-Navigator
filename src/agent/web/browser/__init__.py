@@ -44,6 +44,9 @@ class Browser:
         elif self.config.browser_instance_dir is not None:
             browser_instance=None
         else:
+            if self.config.device is not None:
+                parameters={**self.playwright.devices.get(self.config.device)}
+                parameters.pop('default_browser_type',None)
             if browser=='chrome':
                 browser_instance=await self.playwright.chromium.launch(channel='chrome',**parameters)
             elif browser=='firefox':
