@@ -54,6 +54,7 @@ class WebAgent(BaseAgent):
         self.answer_prompt=read_markdown_file('./src/agent/web/prompt/answer.md')
         self.instructions=self.format_instructions(instructions)
         self.registry=Registry(main_tools+additional_tools+([human_tool] if include_human_in_loop else []))
+        self.include_human_in_loop=include_human_in_loop
         self.browser=Browser(config=config)
         self.context=Context(browser=self.browser)
         self.max_iteration=max_iteration
@@ -216,7 +217,8 @@ class WebAgent(BaseAgent):
             'os':platform.system(),
             'browser':self.browser.config.browser.capitalize(),
             'home_dir':Path.home().as_posix(),
-            'downloads_dir':self.browser.config.downloads_dir
+            'downloads_dir':self.browser.config.downloads_dir,
+            'human_in_loop':self.include_human_in_loop
         })
         if structured_output:
             system_prompt=dedent(f'''

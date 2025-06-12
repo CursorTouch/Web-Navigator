@@ -19,6 +19,6 @@ List of Informative Elements:
 {informative_elements}
 [End of Viewport]
 
-Note: Use the Done Tool if the task is completely over else continue solving.
+Note: Use the Done Tool if the task is completely over else continue solving and follow the structure.
 </Observation>
 ```
