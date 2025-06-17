@@ -1,6 +1,6 @@
-from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward, HumanInput
-from markdownify import markdownify
+from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward,HumanInput
 from src.agent.web.context import Context
+from markdownify import markdownify
 from typing import Literal,Optional
 from termcolor import colored
 from src.tool import Tool
@@ -51,8 +51,8 @@ async def wait_tool(time:int,context:Context=None):
     return f'Waited for {time}s'
 
 @Tool('Scroll Tool',params=Scroll)
-async def scroll_tool(direction:Literal['up','down']='up',amount:int=None,context:Context=None):
-    '''Scrolls the webpage vertically. Can scroll by page increments or by specific pixel amounts. Automatically detects if scrolling is possible and prevents unnecessary scroll attempts.'''
+async def scroll_tool(direction:Literal['up','down']='up',index:int=None,amount:int=None,context:Context=None):
+    '''Scrolls either the webpage or a specific scrollable container. Can scroll by page increments or by specific pixel amounts. If index is provided, scrolls the specific element container; otherwise scrolls the page. Automatically detects scrollable containers and prevents unnecessary scroll attempts.'''
     page=await context.get_current_page()
     scroll_y_before = await context.execute_script(page,"() => window.scrollY")
     max_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight - window.innerHeight")

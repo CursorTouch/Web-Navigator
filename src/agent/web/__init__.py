@@ -22,8 +22,8 @@ import json
 
 main_tools=[
     click_tool,goto_tool,key_tool,scrape_tool,
-    type_tool,scroll_tool,wait_tool,menu_tool,
-    back_tool,tab_tool,done_tool,forward_tool
+    type_tool,scroll_tool,wait_tool,back_tool,
+    tab_tool,done_tool,forward_tool
 ]
 
 class WebAgent(BaseAgent):
@@ -127,7 +127,8 @@ class WebAgent(BaseAgent):
             'current_tab':current_tab.to_string(),
             'tabs':browser_state.tabs_to_string(),
             'interactive_elements':browser_state.dom_state.interactive_elements_to_string(),
-            'informative_elements':browser_state.dom_state.informative_elements_to_string()
+            'informative_elements':browser_state.dom_state.informative_elements_to_string(),
+            'scrollable_elements':browser_state.dom_state.scrollable_elements_to_string()
         })
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision and image_obj is not None else HumanMessage(observation_prompt)]
         return {**state,'messages':messages,'prev_observation':observation}

@@ -6,25 +6,26 @@ class SharedBaseModel(BaseModel):
         extra="allow"
 
 class Done(SharedBaseModel):
-    content:str = Field(...,description="deliver the content for the user's query in proper markdown format",examples=["The task is completed successfully."])
+    content:str = Field(...,description="Summary of the completed task in proper markdown format explaining what was accomplished",examples=["The task is completed successfully. User profile updated with new email address."])
 
 class Click(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to click",examples=[0])
+    index:int = Field(...,description="The index/label of the interactive element to click (buttons, links, checkboxes, tabs, etc.)",examples=[0])
 
 class Type(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to type in the text",examples=[0])
-    text:str = Field(...,description="the text to type",examples=["hello world"])
-    clear:Literal['True','False']=Field(description="whether to clear the text before typing",default="False",examples=['True'])
+    index:int = Field(...,description="The index/label of the input element to type text into (text fields, search boxes, text areas)",examples=[0])
+    text:str = Field(...,description="The text content to type into the input field",examples=["hello world","user@example.com","My search query"])
+    clear:Literal['True','False']=Field(description="Whether to clear existing text before typing new content",default="False",examples=['True'])
 
 class Wait(SharedBaseModel):
-    time:int = Field(...,description="the time to wait for the element to be visible in seconds",examples=[1])
+    time:int = Field(...,description="Number of seconds to wait for page loading, animations, or content to appear",examples=[1,3,5])
 
 class Scroll(SharedBaseModel):
-    direction:Literal['up','down'] = Field(description="the direction to scroll",examples=['up'],default='up')
-    amount:int = Field(description="the amount to scroll, if None then page up or down",examples=[100,250],default=None)
+    direction: Literal['up','down'] = Field(description="The direction to scroll content", examples=['up','down'], default='up')
+    amount: int = Field(description="Number of pixels to scroll, if None then scrolls by page/container height", examples=[100, 250, 500], default=None)
+    index: int = Field(description="Index of specific scrollable container element, if None then scrolls the entire page", examples=[0, 5, 12], default=None)
 
 class GoTo(SharedBaseModel):
-    url:str = Field(...,description="the url to navigate to",examples=["https://www.example.com"])
+    url:str = Field(...,description="The complete URL to navigate to including protocol (http/https)",examples=["https://www.example.com","https://google.com/search?q=test"])
 
 class Back(SharedBaseModel):
     pass
@@ -33,27 +34,27 @@ class Forward(SharedBaseModel):
     pass
 
 class Key(SharedBaseModel):
-    keys:str = Field(...,description="the key or combination of keys to press",examples=["Enter","Control+A","Backspace"])
-    times:int = Field(description="the number of times to press the key or combination of keys",examples=[2],default=1)
+    keys:str = Field(...,description="Keyboard key or key combination to press (supports modifiers like Control, Alt, Shift)",examples=["Enter","Control+A","Escape","Tab","Control+C"])
+    times:int = Field(description="Number of times to repeat the key press sequence",examples=[1,2,3],default=1)
 
 class Download(SharedBaseModel):
-    url:str = Field(...,description="url of the file to download",examples=["https://www.example.com/file.txt","https://abc.org/pdf/54655"])
-    filename:str=Field(...,description="the name of the file to download",examples=["file.txt","xy4rs.pdf"])
+    url:str = Field(...,description="Direct URL of the file to download (supports various file types: PDF, images, videos, documents)",examples=["https://www.example.com/document.pdf","https://site.com/image.jpg"])
+    filename:str=Field(...,description="Local filename to save the downloaded file as (include file extension)",examples=["document.pdf","image.jpg","data.xlsx"])
 
 class Scrape(SharedBaseModel):
     pass
 
 class Tab(SharedBaseModel):
-    mode:Literal['open','close','switch'] = Field(...,description="the mode of the tab",examples=['open'])
-    tab_index:int = Field(description="the index of the tab to switch to, if the mode is 'switch'",examples=[0],default=None)
+    mode:Literal['open','close','switch'] = Field(...,description="Tab operation: 'open' creates new tab, 'close' closes current tab, 'switch' changes to existing tab",examples=['open','close','switch'])
+    tab_index:int = Field(description="Zero-based index of the tab to switch to (only required for 'switch' mode)",examples=[0,1,2],default=None)
 
 class Upload(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to upload file to",examples=[0])
-    filenames:list[str] = Field(...,description="list of filenames of the files to upload",examples=[["file.txt"]])
+    index:int = Field(...,description="Index of the file input element to upload files to",examples=[0])
+    filenames:list[str] = Field(...,description="List of filenames to upload from the ./uploads directory (supports single or multiple files)",examples=[["document.pdf"],["image1.jpg","image2.png"]])
 
 class Menu(SharedBaseModel):
-    index:int = Field(...,description="the index of the element to select from the dropdown menu",examples=[0])
-    labels:list[str] = Field(...,description="list of labels to select from the dropdown menu",examples=[["BMW"]])
+    index:int = Field(...,description="Index of the dropdown/select element to interact with",examples=[0])
+    labels:list[str] = Field(...,description="List of visible option labels to select from the dropdown menu (supports single or multiple selection)",examples=[["BMW"],["Option 1","Option 2"]])
 
 class HumanInput(SharedBaseModel):
-    prompt: str = Field(..., description="The question to ask the user for input", examples=["Please enter the OTP displayed on your device.", "Please give me the login credentials"])
+    prompt: str = Field(..., description="Clear question or instruction to ask the human user when assistance is needed", examples=["Please enter the OTP code sent to your phone", "What is your preferred payment method?", "Please solve this CAPTCHA"])

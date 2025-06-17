@@ -61,7 +61,7 @@ async function injectAllCSS() {
             }
         }
     });
-        // Wait for all fetches to complete
+    // Wait for all fetches to complete
     await Promise.all(fetchPromises);
     // Inject into a single <style> tag
     if (allCSS.trim()) {
@@ -106,6 +106,7 @@ async function injectAllCSS() {
     async function getElements(node=document.body) {
         const interactiveElements = [];
         const informativeElements = [];
+        const scrollableElements = [];
         // Function to wait for the page to be fully loaded
         await waitForPageToLoad();
 
@@ -124,9 +125,10 @@ async function injectAllCSS() {
 
         function isElementScrollable(element) {
             const style = window.getComputedStyle(element);
-            const isOverflow = style.overflow === 'scroll' || style.overflowY === 'scroll';
+            const isOverflow = /(auto|scroll|overlay)/.test(style.overflowY);
             const isScrollable = element.scrollHeight > element.clientHeight;
-            return isOverflow && isScrollable;
+            const isBigEnough = element.clientHeight >= 0.5*window.innerHeight;
+            return isOverflow && isScrollable && isBigEnough;
         }
 
         function isElementInViewport(element) {
@@ -212,7 +214,7 @@ async function injectAllCSS() {
             const isClickable =isElementClickable(currentNode) || hasInteractiveTag || hasInteractiveRole
             const isVisible = isElementVisible(currentNode) && isElementInViewport(currentNode)
             const isScrollable = isElementScrollable(currentNode)
-            if ((isClickable && isVisible) || isScrollable) {
+            if ((isClickable && isVisible)) {
                 // Check if the element is covered by another element
                 const isCovered = !isElementCovered(currentNode);
                 if (isCovered) {
@@ -249,11 +251,31 @@ async function injectAllCSS() {
                                     .map(attr => [attr.name, attr.value])),
                             box: boundingBox || null,  // Avoid undefined errors
                             center: { x, y },
-                            xpath: xpath
+                            xpath: xpath,
                         });
                     }
                 }
             }
+
+            if (isScrollable){
+                const tagName = currentNode.tagName.toLowerCase();
+                const role = currentNode.getAttribute('role') || 'none';
+                const name = currentNode.getAttribute('name') || currentNode.getAttribute('aria-label') || currentNode.getAttribute('title') ||
+                currentNode.getAttribute('aria-labelledby') || currentNode.getAttribute('aria-describedby') || 
+                currentNode.getAttribute('label') || currentNode.innerText?.trim() || 'none';
+                const xpath=getXPath(currentNode)
+                scrollableElements.push({
+                    tag: tagName,
+                    role: role,  // Default to 'none' if no role is found
+                    name: name, // Trim textContent if it exists
+                    attributes: Object.fromEntries(
+                        Array.from(currentNode.attributes)
+                            .filter(attr => SAFE_ATTRIBUTES.has(attr.name))
+                            .map(attr => [attr.name, attr.value])),
+                    xpath: xpath,
+                });
+            }
+
             const hasInformativeTag = INFORMATIVE_TAGS.has(tagName);
             const hasInformativeRole = role && INFORMATIVE_ROLES.has(role);
             const hasContent = currentNode.innerText?.trim()!==''
@@ -301,7 +323,7 @@ async function injectAllCSS() {
             }
         }
         traverseDom(node);
-    return {interactiveElements,informativeElements};
+    return {interactiveElements,informativeElements,scrollableElements};
     }
 
     // Mark page by placing bounding boxes and labels
