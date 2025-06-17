@@ -130,7 +130,6 @@ class WebAgent(BaseAgent):
             'informative_elements':browser_state.dom_state.informative_elements_to_string(),
             'scrollable_elements':browser_state.dom_state.scrollable_elements_to_string()
         })
-        print(browser_state.dom_state.scrollable_nodes)
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision and image_obj is not None else HumanMessage(observation_prompt)]
         return {**state,'messages':messages,'prev_observation':observation}
 
