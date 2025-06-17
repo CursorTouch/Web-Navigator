@@ -54,33 +54,45 @@ async def wait_tool(time:int,context:Context=None):
 async def scroll_tool(direction:Literal['up','down']='up',index:int=None,amount:int=None,context:Context=None):
     '''Scrolls either the webpage or a specific scrollable container. Can scroll by page increments or by specific pixel amounts. If index is provided, scrolls the specific element container; otherwise scrolls the page. Automatically detects scrollable containers and prevents unnecessary scroll attempts.'''
     page=await context.get_current_page()
-    scroll_y_before = await context.execute_script(page,"() => window.scrollY")
-    max_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight - window.innerHeight")
-    min_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight")
-     # Check if scrolling is possible
-    if scroll_y_before >= max_scroll_y and direction == 'down':
-        return "Already at the bottom, cannot scroll further."
-    elif scroll_y_before == min_scroll_y and direction == 'up':
-        return "Already at the top, cannot scroll further."
-    if direction=='up':
-        if amount is None:
-            await page.keyboard.press('PageUp')
+    if index is not None:
+        element=await context.get_element_by_index(index=index)
+        handle=await context.get_handle_by_xpath(element.xpath)
+        frame=await context.get_frame_by_xpath(element.xpath)
+        if direction=='up':
+            await frame.evaluate(f'element=> element.scrollBy(0,-{amount})', handle)
+        elif direction=='down':
+            await frame.evaluate(f'element=> element.scrollBy(0,{amount})', handle)
         else:
-            await page.mouse.wheel(0,-amount)
-    elif direction=='down':
-        if amount is None:
-            await page.keyboard.press('PageDown')
-        else:
-            await page.mouse.wheel(0,amount)
+            raise ValueError('Invalid direction')
+        return f'Scrolled {direction} inside the element at label {index} by {amount}'
     else:
-        raise ValueError('Invalid direction')
-    # Get scroll position after scrolling
-    scroll_y_after = await page.evaluate("() => window.scrollY")
-    # Verify if scrolling was successful
-    if scroll_y_before == scroll_y_after:
-        return "Scrolling has no effect, the entire content fits within the viewport."
-    amount=amount if amount else 'one page'
-    return f'Scrolled {direction} by {amount}'
+        scroll_y_before = await context.execute_script(page,"() => window.scrollY")
+        max_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight - window.innerHeight")
+        min_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight")
+        # Check if scrolling is possible
+        if scroll_y_before >= max_scroll_y and direction == 'down':
+            return "Already at the bottom, cannot scroll further."
+        elif scroll_y_before == min_scroll_y and direction == 'up':
+            return "Already at the top, cannot scroll further."
+        if direction=='up':
+            if amount is None:
+                await page.keyboard.press('PageUp')
+            else:
+                await page.mouse.wheel(0,-amount)
+        elif direction=='down':
+            if amount is None:
+                await page.keyboard.press('PageDown')
+            else:
+                await page.mouse.wheel(0,amount)
+        else:
+            raise ValueError('Invalid direction')
+        # Get scroll position after scrolling
+        scroll_y_after = await context.execute_script(page,"() => window.scrollY")
+        # Verify if scrolling was successful
+        if scroll_y_before == scroll_y_after:
+            return "Scrolling has no effect, the entire content fits within the viewport."
+        amount=amount if amount else 'one page'
+        return f'Scrolled {direction} by {amount}'
 
 @Tool('GoTo Tool',params=GoTo)
 async def goto_tool(url:str,context:Context=None):

@@ -155,14 +155,19 @@ class Context:
         return element
     
     async def get_handle_by_xpath(self,xpath:dict[str,str])->ElementHandle:
+        frame=await self.get_frame_by_xpath(xpath)
+        _,element_xpath=xpath.values()
+        element=await frame.locator(f'xpath={element_xpath}').element_handle()
+        return element
+    
+    async def get_frame_by_xpath(self,xpath:dict[str,str])->Frame:
         page=await self.get_current_page()
-        frame_xpath,element_xpath=xpath.values()
+        frame_xpath,_=xpath.values()
         if frame_xpath: # handle elements from iframe
             frame=page.frame_locator(f'xpath={frame_xpath}')
-            element=await frame.locator(f'xpath={element_xpath}').element_handle()
-        else: #handle elements from main frame
-            element=await page.locator(f'xpath={element_xpath}').element_handle()
-        return element
+        else: # handle elements from main frame
+            frame=page.main_frame
+        return frame
 
     async def execute_script(self,obj:Frame|Page,script:str,args:list=None,enable_handle:bool=False):
         if enable_handle:

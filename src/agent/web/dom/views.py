@@ -1,4 +1,6 @@
 from dataclasses import dataclass,field
+from textwrap import shorten
+
 @dataclass
 class BoundingBox:
     left:int
@@ -48,7 +50,7 @@ class ScrollElementNode:
     xpath: dict[str,str]=field(default_factory=dict)
 
     def __repr__(self):
-        return f"ScrollableElementNode(tag='{self.tag}', role='{self.role}', name='{self.name}', attributes={self.attributes}, xpath='{self.xpath}')"
+        return f"ScrollableElementNode(tag='{self.tag}', role='{self.role}', name='{shorten(self.name,width=500)}', attributes={self.attributes}, xpath='{self.xpath}')"
     
     def to_dict(self)->dict[str,str]:
         return {'tag':self.tag,'role':self.role,'name':self.name,'attributes':self.attributes}
@@ -82,5 +84,5 @@ class DOMState:
     
     def scrollable_elements_to_string(self)->str:
         n=len(self.interactive_nodes)
-        return '\n'.join([f'{n+index+1} - Tag: {node.tag} Role: {node.role} Name: {node.name} Attributes: {node.attributes}' for index,node in enumerate(self.scrollable_nodes)])
+        return '\n'.join([f'{n+index} - Tag: {node.tag} Role: {node.role} Name: {shorten(node.name,width=500)} Attributes: {node.attributes}' for index,node in enumerate(self.scrollable_nodes)])
     
