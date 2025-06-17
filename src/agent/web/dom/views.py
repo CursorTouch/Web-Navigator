@@ -80,7 +80,7 @@ class DOMState:
         return '\n'.join([f'{index} - Tag: {node.tag} Role: {node.role} Name: {node.name} Attributes: {node.attributes} Cordinates: {node.center.to_string()}' for index,(node) in enumerate(self.interactive_nodes)])
     
     def informative_elements_to_string(self)->str:
-        return  '\n'.join([f'Tag: {node.tag} Role: {node.role} Content: {node.content} Cordinates: {node.center.to_string()}' for node in self.informative_nodes])
+        return  '\n'.join([f'Tag: {node.tag} Role: {node.role} Content: {node.content}' for node in self.informative_nodes])
     
     def scrollable_elements_to_string(self)->str:
         n=len(self.interactive_nodes)
