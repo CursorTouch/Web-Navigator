@@ -1,5 +1,5 @@
 from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward, HumanInput
-from main_content_extractor import MainContentExtractor
+from markdownify import markdownify
 from src.agent.web.context import Context
 from typing import Literal,Optional
 from termcolor import colored
@@ -11,12 +11,12 @@ import httpx
 
 @Tool('Done Tool',params=Done)
 async def done_tool(content:str,context:Context=None):
-    '''To indicate that the task is completed'''
+    '''Indicates that the current task has been completed successfully. Use this to signal completion and provide a summary of what was accomplished.'''
     return content
 
 @Tool('Click Tool',params=Click)
 async def click_tool(index:int,context:Context=None):
-    '''To click on elements such as buttons, links, checkboxes, and radio buttons'''
+    '''Clicks on interactive elements like buttons, links, checkboxes, radio buttons, tabs, or any clickable UI component. Automatically scrolls the element into view if needed and handles hidden elements.'''
     page=await context.get_current_page()
     await page.wait_for_load_state('load')
     element=await context.get_element_by_index(index=index)
@@ -29,7 +29,7 @@ async def click_tool(index:int,context:Context=None):
 
 @Tool('Type Tool',params=Type)
 async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
-    '''To type text into input fields, search boxes'''
+    '''Types text into input fields, text areas, search boxes, or any editable element. Can optionally clear existing content before typing. Includes natural typing delay for better compatibility.'''
     page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
     handle=await context.get_handle_by_xpath(element.xpath)
@@ -46,13 +46,13 @@ async def type_tool(index:int,text:str,clear:Literal['True','False']='False',con
 
 @Tool('Wait Tool',params=Wait)
 async def wait_tool(time:int,context:Context=None):
-    '''To wait until the page has fully loaded before proceeding'''
+    '''Pauses execution for a specified number of seconds. Use this to wait for page loading, animations to complete, or content to appear after an action.'''
     await sleep(time)
     return f'Waited for {time}s'
 
 @Tool('Scroll Tool',params=Scroll)
 async def scroll_tool(direction:Literal['up','down']='up',amount:int=None,context:Context=None):
-    '''To scroll the page by a certain amount or by a page up or down and on a specific section of the page'''
+    '''Scrolls the webpage vertically. Can scroll by page increments or by specific pixel amounts. Automatically detects if scrolling is possible and prevents unnecessary scroll attempts.'''
     page=await context.get_current_page()
     scroll_y_before = await context.execute_script(page,"() => window.scrollY")
     max_scroll_y = await context.execute_script(page,"() => document.documentElement.scrollHeight - window.innerHeight")
@@ -84,14 +84,14 @@ async def scroll_tool(direction:Literal['up','down']='up',amount:int=None,contex
 
 @Tool('GoTo Tool',params=GoTo)
 async def goto_tool(url:str,context:Context=None):
-    '''To navigate directly to a specified URL.'''
+    '''Navigates directly to a specified URL in the current tab. Supports HTTP/HTTPS URLs and waits for the DOM content to load before proceeding.'''
     page=await context.get_current_page()
     await page.goto(url=url,wait_until='domcontentloaded')
     return f'Navigated to {url}'
 
 @Tool('Back Tool',params=Back)
 async def back_tool(context:Context=None):
-    '''Go back to the previous page'''
+    '''Navigates to the previous page in the browser history, equivalent to clicking the browser's back button. Waits for the page to fully load.'''
     page=await context.get_current_page()
     await page.go_back()
     await page.wait_for_load_state('load')
@@ -99,7 +99,7 @@ async def back_tool(context:Context=None):
 
 @Tool('Forward Tool',params=Forward)
 async def forward_tool(context:Context=None):
-    '''Go forward to the next page'''
+    '''Navigates to the next page in the browser history, equivalent to clicking the browser's forward button. Waits for the page to fully load.'''
     page=await context.get_current_page()
     await page.go_forward()
     await page.wait_for_load_state('load')
@@ -107,7 +107,7 @@ async def forward_tool(context:Context=None):
 
 @Tool('Key Tool',params=Key)
 async def key_tool(keys:str,times:int=1,context:Context=None):
-    '''To perform keyboard shorcuts'''
+    '''Performs keyboard shortcuts and key combinations (e.g., "Control+C", "Enter", "Escape", "Tab"). Can repeat the key press multiple times. Supports all standard keyboard keys and modifiers.'''
     page=await context.get_current_page()
     await page.wait_for_load_state('domcontentloaded')
     for _ in range(times):
@@ -116,7 +116,7 @@ async def key_tool(keys:str,times:int=1,context:Context=None):
 
 @Tool('Download Tool',params=Download)
 async def download_tool(url:str=None,filename:str=None,context:Context=None):
-    '''To download a file (e.g., pdf, image, video, audio) to the system'''
+    '''Downloads files from the internet (PDFs, images, videos, audio, documents) and saves them to the system's downloads directory. Handles various file types and formats.'''
     folder_path=Path(context.browser.config.downloads_dir)
     async with httpx.AsyncClient() as client:
         response=await client.get(url)
@@ -127,17 +127,17 @@ async def download_tool(url:str=None,filename:str=None,context:Context=None):
     return f'Downloaded {filename} from {url} and saved it to {path}'
 
 @Tool('Scrape Tool',params=Scrape)
-async def scrape_tool(format:Literal['markdown','text']='markdown',context:Context=None):
-    '''Scrape the contents of the entire webpage'''
+async def scrape_tool(context:Context=None):
+    '''Extracts and returns the main content from the current webpage. Can output in markdown format (preserving links and structure). Filters out navigation, ads, and other non-essential content.'''
     page=await context.get_current_page()
     await page.wait_for_load_state('domcontentloaded')
     html=await page.content()
-    content=MainContentExtractor.extract(html=html,include_links=True,output_format=format)
+    content= markdownify(html)
     return f'Scraped the contents of the entire webpage:\n{content}'
 
 @Tool('Tab Tool', params=Tab)
 async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional[int] = None, context: Context = None):
-    '''To open a new tab, close the current tab, and switch from the current tab to the specified tab'''
+    '''Manages browser tabs: opens new blank tabs, closes the current tab (if not the last one), or switches between existing tabs by index. Automatically handles focus and loading states.'''
     session = await context.get_session()
     pages = session.context.pages  # Get all open tabs
     if mode == 'open':
@@ -168,7 +168,7 @@ async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional
 
 @Tool('Upload Tool',params=Upload)
 async def upload_tool(index:int,filenames:list[str],context:Context=None):
-    '''To upload files to an element in the webpage'''
+    '''Uploads one or more files to file input elements on webpages. Handles both single and multiple file uploads. Files should be placed in the ./uploads directory before using this tool.'''
     element=await context.get_element_by_index(index=index)
     handle=await context.get_handle_by_xpath(element.xpath)
     files=[Path(getcwd()).joinpath('./uploads',filename) for filename in filenames]
@@ -186,17 +186,16 @@ async def upload_tool(index:int,filenames:list[str],context:Context=None):
 
 @Tool('Menu Tool',params=Menu)
 async def menu_tool(index:int,labels:list[str],context:Context=None):
-    '''To interact with an element having dropdown menu and select an option from it'''
+    '''Interacts with dropdown menus, select elements, and multi-select lists. Can select single or multiple options by their visible labels. Handles both simple dropdowns and complex multi-selection interfaces.'''
     element=await context.get_element_by_index(index=index)
     handle=await context.get_handle_by_xpath(element.xpath)
     labels=labels if len(labels)>1 else labels[0]
     await handle.select_option(label=labels)
-    return f'Opened context menu of element at label {index} and selected {', '.join(labels)}'
+    return f'Opened context menu of element at label {index} and selected {", ".join(labels)}'
 
-# Add this new tool function
 @Tool('Human Tool',params=HumanInput)
 async def human_tool(prompt:str,context:Context=None):
-    '''To ask a human for input or assistance when stuck (e.g., OTP, CAPTCHA), unsure, or explicitly asked to.'''
+    '''Requests human assistance when encountering challenges that require human intervention such as CAPTCHAs, OTP codes, complex decisions, or when explicitly asked to involve a human user.'''
     print(colored(f"Agent: {prompt}", color='cyan', attrs=['bold']))
     human_response = input("User: ")
     return f"User provided the following input: '{human_response}'"

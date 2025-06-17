@@ -6,7 +6,7 @@ termcolor
 python-dotenv
 httpx
 nest_asyncio
-MainContentExtractor
+markdownify
 ratelimit
 pyaudio
 pyperclip
