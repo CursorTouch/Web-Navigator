@@ -24,27 +24,26 @@ class ChatOpenRouter(BaseInference):
                 if model:
                     message.content=self.structured(message,model) 
                 contents.append(message.to_dict())
-            if isinstance(message,(HumanMessage,AIMessage)):
+            elif isinstance(message,(HumanMessage,AIMessage)):
                 contents.append(message.to_dict())
-            if isinstance(message,ImageMessage):
+            elif isinstance(message,ImageMessage):
                 text,image=message.content
-                contents.append([
-                    {
-                        'role':'user',
-                        'content':[
-                            {
-                                'type':'text',
-                                'text':text
-                            },
-                            {
-                                'type':'image_url',
-                                'image_url':{
-                                    'url':image
-                                }
+                # Fix: Don't wrap in an extra list
+                contents.append({
+                    'role':'user',
+                    'content':[
+                        {
+                            'type':'text',
+                            'text':text
+                        },
+                        {
+                            'type':'image_url',
+                            'image_url':{
+                                'url':image
                             }
-                        ]
-                    }
-                ])
+                        }
+                    ]
+                })
 
         payload={
             "model": self.model,
@@ -67,6 +66,10 @@ class ChatOpenRouter(BaseInference):
         try:
             with Client() as client:
                 response=client.post(url=url,json=payload,headers=headers,timeout=None)
+            
+            # Check HTTP status first
+            response.raise_for_status()
+            
             json_object=response.json()
             # print(json_object)
             if json_object.get('error'):
@@ -85,11 +88,24 @@ class ChatOpenRouter(BaseInference):
                 tool_call=message.get('tool_calls')[0]['function']
                 return ToolMessage(id=str(uuid4()),name=tool_call['name'],args=tool_call['arguments']) 
         except HTTPError as err:
-            err_object=loads(err.response.text)
-            print(f'\nError: {err_object["error"]["message"]}\nStatus Code: {err.response.status_code}')
+            # Fix: Proper error handling for HTTPError
+            try:
+                if hasattr(err, 'response') and err.response is not None:
+                    err_object = err.response.json()
+                    error_msg = err_object.get("error", {}).get("message", "Unknown API error")
+                    status_code = err.response.status_code
+                    print(f'\nError: {error_msg}\nStatus Code: {status_code}')
+                else:
+                    print(f'\nHTTP Error: {str(err)}')
+            except Exception as parse_err:
+                print(f'\nHTTP Error: {str(err)} (Could not parse error response: {parse_err})')
+            raise err  # Re-raise instead of exit()
         except ConnectionError as err:
-            print(err)
-        exit()
+            print(f'\nConnection Error: {err}')
+            raise err  # Re-raise instead of exit()
+        except Exception as err:
+            print(f'\nUnexpected Error: {err}')
+            raise err  # Re-raise instead of exit()
 
     @sleep_and_retry
     @limits(calls=15,period=60)
@@ -98,34 +114,34 @@ class ChatOpenRouter(BaseInference):
         self.headers.update({'Authorization': f'Bearer {self.api_key}'})
         headers=self.headers
         temperature=self.temperature
-        url=self.base_url or "https://api.groq.com/openai/v1/chat/completions"
+        # Fix: Use OpenRouter URL instead of Groq URL
+        url=self.base_url or "https://openrouter.ai/api/v1/chat/completions"
         contents=[]
         for message in messages:
             if isinstance(message,SystemMessage):
                 if model:
                     message.content=self.structured(message,model) 
                 contents.append(message.to_dict())
-            if isinstance(message,(HumanMessage,AIMessage)):
+            elif isinstance(message,(HumanMessage,AIMessage)):
                 contents.append(message.to_dict())
-            if isinstance(message,ImageMessage):
+            elif isinstance(message,ImageMessage):
                 text,image=message.content
-                contents.append([
-                    {
-                        'role':'user',
-                        'content':[
-                            {
-                                'type':'text',
-                                'text':text
-                            },
-                            {
-                                'type':'image_url',
-                                'image_url':{
-                                    'url':image
-                                }
+                # Fix: Don't wrap in an extra list
+                contents.append({
+                    'role':'user',
+                    'content':[
+                        {
+                            'type':'text',
+                            'text':text
+                        },
+                        {
+                            'type':'image_url',
+                            'image_url':{
+                                'url':image
                             }
-                        ]
-                    }
-                ])
+                        }
+                    ]
+                })
 
         payload={
             "model": self.model,
@@ -148,6 +164,10 @@ class ChatOpenRouter(BaseInference):
         try:
             async with AsyncClient() as client:
                 response=await client.post(url=url,json=payload,headers=headers,timeout=None)
+            
+            # Check HTTP status first
+            response.raise_for_status()
+            
             json_object=response.json()
             # print(json_object)
             if json_object.get('error'):
@@ -166,11 +186,24 @@ class ChatOpenRouter(BaseInference):
                 tool_call=message.get('tool_calls')[0]['function']
                 return ToolMessage(id=str(uuid4()),name=tool_call['name'],args=tool_call['arguments']) 
         except HTTPError as err:
-            err_object=loads(err.response.text)
-            print(f'\nError: {err_object["error"]["message"]}\nStatus Code: {err.response.status_code}')
+            # Fix: Proper error handling for HTTPError
+            try:
+                if hasattr(err, 'response') and err.response is not None:
+                    err_object = err.response.json()
+                    error_msg = err_object.get("error", {}).get("message", "Unknown API error")
+                    status_code = err.response.status_code
+                    print(f'\nError: {error_msg}\nStatus Code: {status_code}')
+                else:
+                    print(f'\nHTTP Error: {str(err)}')
+            except Exception as parse_err:
+                print(f'\nHTTP Error: {str(err)} (Could not parse error response: {parse_err})')
+            raise err  # Re-raise instead of exit()
         except ConnectionError as err:
-            print(err)
-        exit()
+            print(f'\nConnection Error: {err}')
+            raise err  # Re-raise instead of exit()
+        except Exception as err:
+            print(f'\nUnexpected Error: {err}')
+            raise err  # Re-raise instead of exit()
 
     def stream(self, messages, json = False):
         pass
