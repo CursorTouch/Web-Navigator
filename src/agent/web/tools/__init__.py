@@ -57,11 +57,10 @@ async def scroll_tool(direction:Literal['up','down']='up',index:int=None,amount:
     if index is not None:
         element=await context.get_element_by_index(index=index)
         handle=await context.get_handle_by_xpath(xpath=element.xpath)
-        frame=await context.get_frame_by_xpath(xpath=element.xpath)
         if direction=='up':
-            await frame.evaluate(f'(element)=> element.scrollBy(0,{-amount})', handle)
+            await page.evaluate(f'(element)=> element.scrollBy(0,{-amount})', handle)
         elif direction=='down':
-            await frame.evaluate(f'(element)=> element.scrollBy(0,{amount})', handle)
+            await page.evaluate(f'(element)=> element.scrollBy(0,{amount})', handle)
         else:
             raise ValueError('Invalid direction')
         return f'Scrolled {direction} inside the element at label {index} by {amount}'
