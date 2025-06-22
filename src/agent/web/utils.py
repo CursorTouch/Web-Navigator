@@ -31,7 +31,7 @@ def extract_agent_data(text):
         action_input_str = action_input_match.group(1).strip()
         try:
             # Convert string to dictionary safely using ast.literal_eval
-            result['Action Input'] = ast.literal_eval(action_input_str)
+            result['Action Input'] = ast.literal_eval(action_input_str.replace('null', 'None').replace('true', 'True').replace('false', 'False'))
         except (ValueError, SyntaxError):
             # If there's an issue with conversion, store it as raw string
             result['Action Input'] = action_input_str

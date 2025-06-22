@@ -21,8 +21,8 @@ class Wait(SharedBaseModel):
 
 class Scroll(SharedBaseModel):
     direction: Literal['up','down'] = Field(description="The direction to scroll content", examples=['up','down'], default='up')
-    amount: int = Field(description="Number of pixels to scroll, if None then scrolls by page/container height. Must required for scrollable container elements and the amount should be small", examples=[100, 25, 50], default=None)
-    index: int = Field(description="Index of specific scrollable container element, if None then scrolls the entire page", examples=[0, 5, 12], default=None)
+    index: int = Field(...,description="Index of specific scrollable element, if None then scrolls the entire page", examples=[0, 5, 12,None])
+    amount: int = Field(description="Number of pixels to scroll, if None then scrolls by page/container height. Must required for scrollable container elements and the amount should be small", examples=[100, 25, 50],default=20)
 
 class GoTo(SharedBaseModel):
     url:str = Field(...,description="The complete URL to navigate to including protocol (http/https)",examples=["https://www.example.com","https://google.com/search?q=test"])
