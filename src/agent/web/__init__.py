@@ -7,7 +7,9 @@ from langgraph.graph import StateGraph,END,START
 from src.agent.web.state import AgentState
 from src.inference import BaseInference
 from src.tool.registry import Registry
+from rich.markdown import Markdown
 from src.memory import BaseMemory
+from rich.console import Console
 from src.agent import BaseAgent
 from pydantic import BaseModel
 from datetime import datetime
@@ -61,6 +63,7 @@ class WebAgent(BaseAgent):
         self.token_usage=token_usage
         self.structured_output=None
         self.use_vision=use_vision
+        self.console=Console()
         self.verbose=verbose
         self.start_time=None
         self.memory=memory
@@ -270,6 +273,10 @@ class WebAgent(BaseAgent):
             'messages':[]}
         return response
     
+    def print_response(self,input: str):
+        response=self.invoke(input)
+        self.console.print(Markdown(response.get('output')))
+
     async def close(self):
         '''Close the browser and context followed by clean up'''
         try:
