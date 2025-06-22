@@ -105,7 +105,7 @@ class WebAgent(BaseAgent):
         state['messages'].pop() # Remove the last message for modification
         last_message=state['messages'][-1] # ImageMessage/HumanMessage
         if isinstance(last_message,(ImageMessage,HumanMessage)):
-            state['messages'][-1]=HumanMessage(f'<Observation>{state.get('prev_observation')}</Observation>')
+            state['messages'][-1]=HumanMessage(f'<Input>{state.get('prev_observation')}</Input>')
         if self.verbose and self.token_usage:
             print(f'Input Tokens: {self.llm.tokens.input} Output Tokens: {self.llm.tokens.output} Total Tokens: {self.llm.tokens.total}')
         # Get the current browser state
@@ -138,7 +138,7 @@ class WebAgent(BaseAgent):
         state['messages'].pop() # Remove the last message for modification
         last_message=state['messages'][-1] # ImageMessage/HumanMessage
         if isinstance(last_message,(ImageMessage,HumanMessage)):
-            state['messages'][-1]=HumanMessage(f'<Observation>{state.get('prev_observation')}</Observation>')
+            state['messages'][-1]=HumanMessage(f'<Input>{state.get('prev_observation')}</Input>')
         if self.iteration<self.max_iteration:
             agent_data=state.get('agent_data')
             evaluate=agent_data.get("Evaluate")
@@ -235,7 +235,7 @@ class WebAgent(BaseAgent):
         # Attach memory layer to the system prompt
         if self.memory and self.memory.retrieve(input):
             system_prompt=self.memory.attach_memory(system_prompt)
-        human_prompt=f'Task: {input}'
+        human_prompt=f'<user_query>{input}</user_query>'
         messages=[SystemMessage(system_prompt),HumanMessage(human_prompt)]
         state={
             'input':input,

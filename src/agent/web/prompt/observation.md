@@ -1,27 +1,32 @@
 ```xml
-<Observation>
-Execution Step: ({iteration}/{max_iteration})
+<Input>
+    <AgentState>
+        Current Step: {iteration}
 
-Action Response: {observation}
+        Max. Steps: {max_iteration}
 
-[Begin Tab Info]
-Current Tab: {current_tab}
+        Action Response: {observation}
+    </AgentState>
+    <BrowserState>
+        [Begin of Tab Info]
+        Current Tab: {current_tab}
 
-Open Tabs:
-{tabs}
-[End of Tab Info]
+        Open Tabs:
+        {tabs}
+        [End of Tab Info]
 
-[Begin of Viewport]
-List of Interactive Elements:
-{interactive_elements}
+        [Begin of Viewport]
+        List of Interactive Elements:
+        {interactive_elements}
 
-List of Scrollable Elements:
-{scrollable_elements}
+        List of Scrollable Elements:
+        {scrollable_elements}
 
-List of Informative Elements:
-{informative_elements}
-[End of Viewport]
+        List of Informative Elements:
+        {informative_elements}
+        [End of Viewport]
 
-Note: Use the Done Tool if the task is completely over else continue solving and follow the structure.
-</Observation>
+        Note: Use the Done Tool if the task is completely over else continue solving and follow the structure.
+    </BrowserState>
+</Input>
 ```
