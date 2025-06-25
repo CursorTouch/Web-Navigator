@@ -51,7 +51,7 @@ async def wait_tool(time:int,context:Context=None):
     return f'Waited for {time}s'
 
 @Tool('Scroll Tool',params=Scroll)
-async def scroll_tool(direction:Literal['up','down']='up',index:int=None,amount:int=20,context:Context=None):
+async def scroll_tool(direction:Literal['up','down']='up',index:int=None,amount:int=500,context:Context=None):
     '''Scrolls either the webpage or a specific scrollable container. Can scroll by page increments or by specific pixel amounts. If index is provided, scrolls the specific element container; otherwise scrolls the page. Automatically detects scrollable containers and prevents unnecessary scroll attempts.'''
     page=await context.get_current_page()
     if index is not None:
@@ -98,6 +98,7 @@ async def goto_tool(url:str,context:Context=None):
     '''Navigates directly to a specified URL in the current tab. Supports HTTP/HTTPS URLs and waits for the DOM content to load before proceeding.'''
     page=await context.get_current_page()
     await page.goto(url=url,wait_until='domcontentloaded')
+    await page.wait_for_timeout(2.5*1000)
     return f'Navigated to {url}'
 
 @Tool('Back Tool',params=Back)

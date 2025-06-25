@@ -212,7 +212,7 @@ class WebAgent(BaseAgent):
         self.iteration=0
         self.structured_output=structured_output
         tools_prompt=self.registry.tools_prompt()
-        current_datetime=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        current_datetime=datetime.now().strftime('%A, %B %d, %Y')
         system_prompt=self.system_prompt.format(**{
             'instructions':self.instructions,
             'current_datetime':current_datetime,
