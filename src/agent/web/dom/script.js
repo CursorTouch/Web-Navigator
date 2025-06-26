@@ -240,7 +240,7 @@ async function injectAllCSS() {
                     const name = currentNode.getAttribute('name') || currentNode.getAttribute('aria-label') || currentNode.getAttribute('title') ||
                     currentNode.getAttribute('aria-labelledby') || currentNode.getAttribute('aria-describedby') || 
                     currentNode.getAttribute('label') || currentNode.innerText?.trim() || 'none';
-                    if((role!=='none' || name!=='none')){
+                    if((role!=='none' || name!=='none'||isClickable)){
                         interactiveElements.push({
                             tag: tagName,
                             role: role,  // Default to 'none' if no role is found

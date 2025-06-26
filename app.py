@@ -12,7 +12,7 @@ user_data_dir = os.getenv('USER_DATA_DIR')
 
 llm=ChatGemini(model='gemini-2.0-flash',api_key=api_key,temperature=0)
 config=BrowserConfig(device=None,browser='edge',browser_instance_dir=browser_instance_dir,user_data_dir=user_data_dir,headless=False)
-agent=WebAgent(config=config,llm=llm,verbose=True,use_vision=True,max_iteration=100)
 
+agent=WebAgent(config=config,llm=llm,verbose=True,use_vision=True,max_iteration=100)
 user_query = input('Enter your query: ')
 agent.print_response(user_query)
