@@ -52,6 +52,9 @@ At every step, Web Agent will be given the state:
       List of Informative Elements: these elements provide the text in the webpage.
       [End of Viewport]
    </BrowserState>
+   <user_query>
+   The ultimate goal for Web Agent given by the user, use it to track progress.
+   </user_query>
 <Input>
 ```
 

@@ -1,6 +1,6 @@
-# Contributing to MCP-Use
+# Contributing to Web-Agent
 
-Thank you for your interest in contributing to MCP-Use! This document provides guidelines and instructions for contributing to this project.
+Thank you for your interest in contributing to Web Agent! document provides guidelines and instructions for contributing to this project.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ Thank you for your interest in contributing to MCP-Use! This document provides g
 
 ### Development Environment
 
-MCP-Use requires:
+Web Agent requires:
 - Python 3.11 or later
 
 ### Installation from Source
@@ -35,7 +35,7 @@ MCP-Use requires:
 2. Clone your fork locally:
 
 ```bash
-git clone https://github.com/Jeomon/Windows-MCP.git
+git clone https://github.com/CursorTouch/Web-Agent.git
 cd mcp-use
 ```
 
@@ -149,4 +149,4 @@ If you need help with your contribution:
 - Reach out to the maintainers
 - Check existing code for examples
 
-Thank you for contributing to Windows-MCP!
+Thank you for contributing to Web Agent!

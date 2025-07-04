@@ -25,8 +25,11 @@
         List of Informative Elements:
         {informative_elements}
         [End of Viewport]
+        <user_query>
+        {query}
+        </user_query>
 
-        Note: Use the Done Tool if the task is completely over else continue solving and follow the structure.
+        Note: Use the `Done Tool` if the task is completely over else continue solving.
     </BrowserState>
 </Input>
 ```

@@ -167,7 +167,7 @@ async def tab_tool(mode: Literal['open', 'close', 'switch'], tab_index: Optional
         session.current_page = pages[-1]  # Switch to last remaining tab
         await session.current_page.bring_to_front()
         await session.current_page.wait_for_load_state('load')
-        return f'Closed current tab and switched to the next last tab.'
+        return 'Closed current tab and switched to the next last tab.'
     elif mode == 'switch':
         if tab_index is None or tab_index < 0 or tab_index >= len(pages):
             raise IndexError(f'Tab index {tab_index} is out of range. Available tabs: {len(pages)}')

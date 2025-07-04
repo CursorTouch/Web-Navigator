@@ -44,33 +44,6 @@ const SAFE_ATTRIBUTES = new Set([
 
 const labels = [];
 
-async function injectAllCSS() {
-    const stylesheets = document.styleSheets;
-    let allCSS = ""; // Store all CSS content
-        
-    let fetchPromises = Array.from(stylesheets).map(async (stylesheet) => {
-        if (stylesheet.href) {
-            try {
-                let response = await fetch(stylesheet.href);
-                if (response.ok) {
-                    let text = await response.text();
-                        allCSS += `\\n/* ${stylesheet.href} */\\n` + text; // Append fetched CSS
-                }
-            } catch (error) {
-                console.error('Error fetching CSS:', stylesheet.href, error);
-            }
-        }
-    });
-    // Wait for all fetches to complete
-    await Promise.all(fetchPromises);
-    // Inject into a single <style> tag
-    if (allCSS.trim()) {
-        const styleElement = document.createElement('style');
-        styleElement.textContent = allCSS;
-        document.head.appendChild(styleElement);
-    }
-}
-
     function getXPath(element) {
         if (!element || element.nodeType !== Node.ELEMENT_NODE) return "";
         let parts = [];

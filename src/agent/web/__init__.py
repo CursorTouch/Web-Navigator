@@ -1,10 +1,10 @@
-from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,download_tool,tab_tool,forward_tool,menu_tool,done_tool,human_tool
+from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,tab_tool,forward_tool,done_tool,human_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
-from src.agent.web.context import Context,ContextConfig
 from langgraph.graph import StateGraph,END,START
 from src.agent.web.state import AgentState
+from src.agent.web.context import Context
 from src.inference import BaseInference
 from src.tool.registry import Registry
 from rich.markdown import Markdown
@@ -63,7 +63,6 @@ class WebAgent(BaseAgent):
         self.token_usage=token_usage
         self.structured_output=None
         self.use_vision=use_vision
-        self.console=Console()
         self.verbose=verbose
         self.start_time=None
         self.memory=memory
@@ -131,7 +130,8 @@ class WebAgent(BaseAgent):
             'tabs':browser_state.tabs_to_string(),
             'interactive_elements':browser_state.dom_state.interactive_elements_to_string(),
             'informative_elements':browser_state.dom_state.informative_elements_to_string(),
-            'scrollable_elements':browser_state.dom_state.scrollable_elements_to_string()
+            'scrollable_elements':browser_state.dom_state.scrollable_elements_to_string(),
+            'query':state.get('input')
         })
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision and image_obj is not None else HumanMessage(observation_prompt)]
         return {**state,'messages':messages,'prev_observation':observation}
@@ -238,8 +238,18 @@ class WebAgent(BaseAgent):
         # Attach memory layer to the system prompt
         if self.memory and self.memory.retrieve(input):
             system_prompt=self.memory.attach_memory(system_prompt)
-        human_prompt=f'<user_query>{input}</user_query>'
-        messages=[SystemMessage(system_prompt),HumanMessage(human_prompt)]
+        observation_prompt=self.observation_prompt.format(**{
+            'iteration':self.iteration,
+            'max_iteration':self.max_iteration,
+            'observation':'No Action',
+            'current_tab':'No tabs open',
+            'tabs':'No tabs open',
+            'interactive_elements':'No interactive elements found',
+            'informative_elements':'No informative elements found',
+            'scrollable_elements':'No scrollable elements found',
+            'query':input
+        })
+        messages=[SystemMessage(system_prompt),HumanMessage(observation_prompt)]
         state={
             'input':input,
             'agent_data':{},
@@ -261,28 +271,26 @@ class WebAgent(BaseAgent):
         
     def invoke(self, input: str,structured_output:BaseModel=None)->dict|BaseModel:
         if self.verbose:
-            print(f'Entering '+colored(self.name,'black','on_white'))
+            print('Entering '+colored(self.name,'black','on_white'))
         try:
-            loop=asyncio.get_event_loop()
-            response=loop.run_until_complete(self.async_invoke(input=input,structured_output=structured_output))
-        except RuntimeError as e:
-            print('RuntimeError:',e)
-            response={'input':input,
-            'agent_data':{},
-            'output':f'Error: {e}',
-            'messages':[]}
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        response = loop.run_until_complete(self.async_invoke(input=input, structured_output=structured_output))
         return response
     
     def print_response(self,input: str):
+        console=Console()
         response=self.invoke(input)
-        self.console.print(Markdown(response.get('output')))
+        console.print(Markdown(response.get('output')))
 
     async def close(self):
         '''Close the browser and context followed by clean up'''
         try:
             await self.context.close_session()
             await self.browser.close_browser()
-        except Exception as e:
+        except Exception:
             print('Failed to finish clean up')
         finally:
             self.context=None
