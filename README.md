@@ -111,7 +111,7 @@ This project is licensed under MIT License - see the [LICENSE](LICENSE) file for
 
 ## 🤝Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING](CONTRIBUTING) for setup instructions and development guidelines.
+Contributions are welcome! Please see [CONTRIBUTING](CONTRIBUTING.md) for setup instructions and development guidelines.
 
 Made with ❤️ by [Jeomon George](https://github.com/Jeomon), [Muhammad Yaseen](https://github.com/mhmdyaseen)
 
