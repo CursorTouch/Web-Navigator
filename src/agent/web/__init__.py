@@ -260,6 +260,9 @@ class WebAgent(BaseAgent):
         response = loop.run_until_complete(self.async_invoke(input=input))
         return response
     
+    async def invoke_history(self, input: str)->dict|BaseModel:
+        pass
+    
     def print_response(self,input: str):
         console=Console()
         response=self.invoke(input)
