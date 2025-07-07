@@ -91,7 +91,6 @@ class WebAgent(BaseAgent):
         })
         messages=[SystemMessage(system_prompt)]+state.get('messages')
         ai_message=await self.llm.async_invoke(messages=messages)
-        # print(ai_message.content)
         agent_data=extract_agent_data(ai_message.content)
         memory=agent_data.get('Memory')
         evaluate=agent_data.get("Evaluate")
@@ -128,14 +127,14 @@ class WebAgent(BaseAgent):
         action_result=await self.registry.async_execute(action_name,action_input,context=self.context)
         observation=action_result.content
         if self.verbose:
-            print(colored(f'Observation: {textwrap.shorten(observation,width=500)}',color='green',attrs=['bold']))
+            print(colored(f'Observation: {textwrap.shorten(observation,width=1000,placeholder='...')}',color='green',attrs=['bold']))
         if self.verbose and self.token_usage:
             print(f'Input Tokens: {self.llm.tokens.input} Output Tokens: {self.llm.tokens.output} Total Tokens: {self.llm.tokens.total}')
-        # Get the current browser state
+        # Get the current screenshot,browser state and dom state
         browser_state=await self.context.get_state(use_vision=self.use_vision)
+        current_tab=browser_state.current_tab
         dom_state=browser_state.dom_state
         image_obj=browser_state.screenshot
-        current_tab=browser_state.current_tab
         # Redefining the AIMessage and adding the new observation
         action_prompt=self.action_prompt.format(**{
             'memory':memory,
@@ -147,10 +146,6 @@ class WebAgent(BaseAgent):
         observation_prompt=self.observation_prompt.format(**{
             'iteration':self.iteration,
             'max_iteration':self.max_iteration,
-            'memory':memory,
-            'evaluate':evaluate,
-            'thought':thought,
-            'action':f'{action_name}({','.join([f'{k}={v}' for k,v in action_input.items()])})',
             'observation':observation,
             'current_tab':current_tab.to_string(),
             'tabs':browser_state.tabs_to_string(),
@@ -189,7 +184,8 @@ class WebAgent(BaseAgent):
         message=AIMessage(answer_prompt)
         if self.verbose:
             print(colored(f'Final Answer: {final_answer}',color='cyan',attrs=['bold']))
-        return {**state,'output':final_answer,'messages':[message]}
+        await self.close()
+        return {**state,'browser_state':None,'dom_state':None,'output':final_answer,'messages':[message],'prev_observation':'','agent_data':{}}
 
     def main_controller(self,state:AgentState):
         "Route to the next node"
@@ -243,7 +239,6 @@ class WebAgent(BaseAgent):
         }
         self.start_time=datetime.now()
         response=await self.graph.ainvoke(state,config={'recursion_limit':self.max_iteration})
-        await self.close()
         self.end_time=datetime.now()
         total_seconds=(self.end_time-self.start_time).total_seconds()
         if self.verbose and self.token_usage:
