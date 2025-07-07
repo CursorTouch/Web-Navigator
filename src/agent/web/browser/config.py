@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal
+from pathlib import Path
 
 @dataclass
 class BrowserConfig:
@@ -7,7 +8,7 @@ class BrowserConfig:
     wss_url:str=None
     device:str=None
     browser_instance_dir:str=None
-    downloads_dir:str=None
+    downloads_dir:str=(Path.home()/'Downloads').as_posix()
     browser:Literal['chrome','firefox','edge']='edge'
     user_data_dir:str=None
     timeout:int=60*1000
