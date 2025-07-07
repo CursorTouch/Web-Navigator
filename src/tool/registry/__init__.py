@@ -7,9 +7,11 @@ class Registry:
         self.tools=tools
         self.tools_registry=self.registry()
 
-    def tools_prompt(self):
+    def tools_prompt(self,excluded_tools:list[str]=[]):
         prompts=[]
         for tool in self.tools:
+            if tool.name in excluded_tools:
+                continue
             prompts.append(tool.get_prompt())
         return '\n\n'.join(prompts)
 

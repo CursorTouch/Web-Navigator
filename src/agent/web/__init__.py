@@ -14,6 +14,7 @@ from src.agent import BaseAgent
 from pydantic import BaseModel
 from datetime import datetime
 from termcolor import colored
+from textwrap import dedent
 from src.tool import Tool
 from pathlib import Path
 import textwrap
@@ -102,7 +103,20 @@ class WebAgent(BaseAgent):
             print(colored(f'Evaluate: {evaluate}',color='light_yellow',attrs=['bold']))
             print(colored(f'Memory: {memory}',color='light_green',attrs=['bold']))
             print(colored(f'Thought: {thought}',color='light_magenta',attrs=['bold']))
-        return {**state,'agent_data': agent_data,'route':route}
+        last_message=state.get('messages').pop() # ImageMessage/HumanMessage
+        if isinstance(last_message,(ImageMessage,HumanMessage)):
+            message=HumanMessage(dedent(f'''
+            <Input>
+                <AgentState>
+                    Current Step: {self.iteration}
+
+                    Max. Steps: {self.max_iteration}
+
+                    Action Response: {state.get('prev_observation')}                
+                </AgentState>
+            </Input>                       
+            '''))
+            return {**state,'agent_data': agent_data,'route':route,'messages':[message]}
 
     async def action(self,state:AgentState):
         "Execute the provided action"
@@ -118,13 +132,11 @@ class WebAgent(BaseAgent):
         observation=action_result.content
         if self.verbose:
             print(colored(f'Observation: {textwrap.shorten(observation,width=500)}',color='green',attrs=['bold']))
-        last_message=state.get('messages').pop() # ImageMessage/HumanMessage
-        if isinstance(last_message,(ImageMessage,HumanMessage)):
-            state.get('messages').append(HumanMessage(f'<Input>{state.get('prev_observation')}</Input>'))
         if self.verbose and self.token_usage:
             print(f'Input Tokens: {self.llm.tokens.input} Output Tokens: {self.llm.tokens.output} Total Tokens: {self.llm.tokens.total}')
         # Get the current browser state
         browser_state=await self.context.get_state(use_vision=self.use_vision)
+        dom_state=browser_state.dom_state
         image_obj=browser_state.screenshot
         current_tab=browser_state.current_tab
         # Redefining the AIMessage and adding the new observation
@@ -145,19 +157,16 @@ class WebAgent(BaseAgent):
             'observation':observation,
             'current_tab':current_tab.to_string(),
             'tabs':browser_state.tabs_to_string(),
-            'interactive_elements':browser_state.dom_state.interactive_elements_to_string(),
-            'informative_elements':browser_state.dom_state.informative_elements_to_string(),
-            'scrollable_elements':browser_state.dom_state.scrollable_elements_to_string(),
+            'interactive_elements':dom_state.interactive_elements_to_string(),
+            'informative_elements':dom_state.informative_elements_to_string(),
+            'scrollable_elements':dom_state.scrollable_elements_to_string(),
             'query':state.get('input')
         })
         messages=[AIMessage(action_prompt),ImageMessage(text=observation_prompt,image_obj=image_obj) if self.use_vision and image_obj is not None else HumanMessage(observation_prompt)]
-        return {**state,'messages':messages,'prev_observation':observation}
+        return {**state,'messages':messages,'browser_state':browser_state,'dom_state':dom_state,'prev_observation':observation}
 
     async def answer(self,state:AgentState):
         "Give the final answer"
-        last_message=state.get('messages').pop() # ImageMessage/HumanMessage
-        if isinstance(last_message,(ImageMessage,HumanMessage)):
-            state.get('messages').append(HumanMessage(f'<Input>{state.get('prev_observation')}</Input>'))
         if self.iteration<self.max_iteration:
             agent_data=state.get('agent_data')
             evaluate=agent_data.get("Evaluate")
@@ -180,10 +189,10 @@ class WebAgent(BaseAgent):
             'thought':thought,
             'final_answer':final_answer
         })
-        messages=[AIMessage(answer_prompt)]
+        message=AIMessage(answer_prompt)
         if self.verbose:
             print(colored(f'Final Answer: {final_answer}',color='cyan',attrs=['bold']))
-        return {**state,'output':final_answer,'messages':messages}
+        return {**state,'output':final_answer,'messages':[message]}
 
     def main_controller(self,state:AgentState):
         "Route to the next node"
@@ -229,6 +238,9 @@ class WebAgent(BaseAgent):
         state={
             'input':input,
             'agent_data':{},
+            'prev_observation':'No Observation',
+            'browser_state':None,
+            'dom_state':None,
             'output':'',
             'messages':[HumanMessage(observation_prompt)]
         }
