@@ -13,7 +13,6 @@ class DOM:
     async def get_state(self,use_vision:bool=False,freeze:bool=False)->tuple[str|None,DOMState]:
         '''Get the state of the webpage.'''
         try:
-            selector_map={}
             if freeze:
                 await sleep(5)
             with open('./src/agent/web/dom/script.js') as f:
@@ -50,7 +49,7 @@ class DOM:
             script=f.read()
         try:
             for index,frame in enumerate(frames):
-                if frame.is_detached():
+                if frame.is_detached() or frame.url=='about:blank':
                     continue
                 # print(f"Getting elements from frame: {frame.url}")
                 await self.context.execute_script(frame,script)  # Inject JS
