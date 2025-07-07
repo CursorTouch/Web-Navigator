@@ -7,10 +7,10 @@ class Registry:
         self.tools=tools
         self.tools_registry=self.registry()
 
-    def tools_prompt(self,excluded_tools:list[str]=[],included_tools:list[str]=[])->str:
+    def tools_prompt(self,excluded_tools:list[str]=[])->str:
         prompts=[]
         for tool in self.tools:
-            if tool.name in excluded_tools or tool.name not in included_tools:
+            if tool.name in excluded_tools:
                 continue
             prompts.append(tool.get_prompt())
         return '\n\n'.join(prompts)

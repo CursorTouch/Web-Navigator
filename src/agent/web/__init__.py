@@ -78,17 +78,16 @@ class WebAgent(BaseAgent):
 
     async def reason(self,state:AgentState):
         "Call LLM to make decision based on the current state of the browser"
-        current_datetime=datetime.now().strftime('%A, %B %d, %Y')
         system_prompt=self.system_prompt.format(**{
             'os':platform.system(),
             'instructions':self.instructions,
             'home_dir':Path.home().as_posix(),
             'max_iteration':self.max_iteration,
-            'current_datetime':current_datetime,
             'human_in_loop':self.include_human_in_loop,
             'tools_prompt':self.registry.tools_prompt(),
             'browser':self.browser.config.browser.capitalize(),
-            'downloads_dir':self.browser.config.downloads_dir
+            'downloads_dir':self.browser.config.downloads_dir,
+            'current_datetime':datetime.now().strftime('%A, %B %d, %Y')
         })
         messages=[SystemMessage(system_prompt)]+state.get('messages')
         ai_message=await self.llm.async_invoke(messages=messages)
@@ -101,7 +100,7 @@ class WebAgent(BaseAgent):
             print(colored(f'Evaluate: {evaluate}',color='light_yellow',attrs=['bold']))
             print(colored(f'Memory: {memory}',color='light_green',attrs=['bold']))
             print(colored(f'Thought: {thought}',color='light_magenta',attrs=['bold']))
-        last_message=state.get('messages').pop() # ImageMessage/HumanMessage
+        last_message=state.get('messages').pop() # ImageMessage/HumanMessage. To remove the past browser state
         if isinstance(last_message,(ImageMessage,HumanMessage)):
             message=HumanMessage(dedent(f'''
             <Input>
