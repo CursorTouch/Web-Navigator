@@ -77,19 +77,18 @@ class WebAgent(BaseAgent):
         return '\n'.join([f'{i+1}. {instruction}' for (i,instruction) in enumerate(instructions)])
 
     async def reason(self,state:AgentState):
-        "Call LLM to make decision"
-        tools_prompt=self.registry.tools_prompt()
+        "Call LLM to make decision based on the current state of the browser"
         current_datetime=datetime.now().strftime('%A, %B %d, %Y')
         system_prompt=self.system_prompt.format(**{
-            'instructions':self.instructions,
-            'current_datetime':current_datetime,
-            'tools_prompt':tools_prompt,
-            'max_iteration':self.max_iteration,
             'os':platform.system(),
-            'browser':self.browser.config.browser.capitalize(),
+            'instructions':self.instructions,
             'home_dir':Path.home().as_posix(),
-            'downloads_dir':self.browser.config.downloads_dir,
-            'human_in_loop':self.include_human_in_loop
+            'max_iteration':self.max_iteration,
+            'current_datetime':current_datetime,
+            'human_in_loop':self.include_human_in_loop,
+            'tools_prompt':self.registry.tools_prompt(),
+            'browser':self.browser.config.browser.capitalize(),
+            'downloads_dir':self.browser.config.downloads_dir
         })
         messages=[SystemMessage(system_prompt)]+state.get('messages')
         ai_message=await self.llm.async_invoke(messages=messages)
@@ -98,7 +97,6 @@ class WebAgent(BaseAgent):
         memory=agent_data.get('Memory')
         evaluate=agent_data.get("Evaluate")
         thought=agent_data.get('Thought')
-        route=agent_data.get('Route')
         if self.verbose:
             print(colored(f'Evaluate: {evaluate}',color='light_yellow',attrs=['bold']))
             print(colored(f'Memory: {memory}',color='light_green',attrs=['bold']))
@@ -116,7 +114,7 @@ class WebAgent(BaseAgent):
                 </AgentState>
             </Input>                       
             '''))
-            return {**state,'agent_data': agent_data,'route':route,'messages':[message]}
+            return {**state,'agent_data': agent_data,'messages':[message]}
 
     async def action(self,state:AgentState):
         "Execute the provided action"
