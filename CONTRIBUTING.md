@@ -1,42 +1,45 @@
 # Contributing to Web-Agent
 
-Thank you for your interest in contributing to Web Agent! document provides guidelines and instructions for contributing to this project.
+Thank you for your interest in contributing to Web Agent! This document provides guidelines and instructions for contributing to this project.
 
 ## Table of Contents
 
 - [Getting Started](#getting-started)
   - [Development Environment](#development-environment)
-  - [Installation from Source](#installation-from-source)
+  - [Installation](#installation-from-source)
+  
 - [Development Workflow](#development-workflow)
   - [Branching Strategy](#branching-strategy)
   - [Commit Messages](#commit-messages)
   - [Code Style](#code-style)
   - [Pre-commit Hooks](#pre-commit-hooks)
+
 - [Testing](#testing)
   - [Running Tests](#running-tests)
   - [Adding Tests](#adding-tests)
+
 - [Pull Requests](#pull-requests)
   - [Creating a Pull Request](#creating-a-pull-request)
   - [Pull Request Template](#pull-request-template)
+  
 - [Documentation](#documentation)
-- [Release Process](#release-process)
 - [Getting Help](#getting-help)
 
 ## Getting Started
 
 ### Development Environment
 
-Web Agent requires:
+WebAgent requires:
 - Python 3.11 or later
 
-### Installation from Source
+### Installation
 
 1. Fork the repository on GitHub.
 2. Clone your fork locally:
 
 ```bash
 git clone https://github.com/CursorTouch/Web-Agent.git
-cd mcp-use
+cd web-agent
 ```
 
 3. Install the package in development mode:
@@ -139,14 +142,12 @@ def function_name(param1: type, param2: type) -> return_type:
     """
 ```
 
-- Update README.md for user-facing changes
 
 ## Getting Help
 
 If you need help with your contribution:
 
 - Open an issue for discussion
-- Reach out to the maintainers
-- Check existing code for examples
+- Reach out to any of the our maintainers
 
-Thank you for contributing to Web Agent!
+We look forward to your contributions!
