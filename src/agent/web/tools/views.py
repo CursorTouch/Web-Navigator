@@ -15,6 +15,7 @@ class Type(SharedBaseModel):
     index:int = Field(...,description="The index/label of the input element to type text into (text fields, search boxes, text areas)",examples=[0])
     text:str = Field(...,description="The text content to type into the input field",examples=["hello world","user@example.com","My search query"])
     clear:Literal['True','False']=Field(description="Whether to clear existing text before typing new content",default="False",examples=['True'])
+    press_enter:Literal['True','False']=Field(description="Whether to press Enter after typing",default="False",examples=['True'])
 
 class Wait(SharedBaseModel):
     time:int = Field(...,description="Number of seconds to wait for page loading, animations, or content to appear",examples=[1,3,5])

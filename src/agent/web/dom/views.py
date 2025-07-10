@@ -34,6 +34,7 @@ class DOMElementNode:
     center: CenterCord
     attributes: dict[str,str] = field(default_factory=dict)
     xpath: dict[str,str]=field(default_factory=dict)
+    viewport: tuple[int,int]=field(default_factory=tuple)
 
     def __repr__(self):
         return f"DOMElementNode(tag='{self.tag}', role='{self.role}', name='{self.name}', attributes={self.attributes}, cordinates={self.center}, bounding_box={self.bounding_box}, xpath='{self.xpath}')"
@@ -48,6 +49,7 @@ class ScrollElementNode:
     name: str
     attributes: dict[str,str] = field(default_factory=dict)
     xpath: dict[str,str]=field(default_factory=dict)
+    viewport: tuple[int,int]=field(default_factory=tuple)
 
     def __repr__(self):
         return f"ScrollableElementNode(tag='{self.tag}', role='{self.role}', name='{shorten(self.name,width=500)}', attributes={self.attributes}, xpath='{self.xpath}')"
@@ -62,6 +64,7 @@ class DOMTextualNode:
     content:str
     center: CenterCord
     xpath: dict[str,str]=field(default_factory=dict)
+    viewport: tuple[int,int]=field(default_factory=tuple)
 
     def __repr__(self):
         return f'DOMTextualNode(tag={self.tag}, role={self.role}, content={self.content}, cordinates={self.center}, xpath={self.xpath})'

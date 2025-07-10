@@ -175,6 +175,11 @@ class Context:
             return handle.as_element()
         return await obj.evaluate(script,args)
     
+    async def get_viewport(self)->tuple[int,int]:
+        page=await self.get_current_page()
+        viewport:dict=await self.execute_script(page,'({width: window.innerWidth, height: window.innerHeight})')
+        return(viewport.get('width'),viewport.get('height'))
+    
     def is_ad_url(self,url:str)->bool:
         url_pattern=urlparse(url).netloc
         if not url_pattern:
@@ -212,10 +217,6 @@ class Context:
         await page.wait_for_timeout(2*1000)
         screenshot=await page.screenshot(path=path,full_page=full_page,animations='disabled',type='jpeg')
         return screenshot
-    
-    async def is_page_blank(self):
-        page=await self.get_current_page()
-        return page.url=='about:blank'
     
     def inline_style_parser(self,style:str)->dict[str,str]:
         styles = {}

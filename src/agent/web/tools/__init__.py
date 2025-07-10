@@ -28,7 +28,7 @@ async def click_tool(index:int,context:Context=None):
     return f'Clicked on the element at label {index}'
 
 @Tool('Type Tool',params=Type)
-async def type_tool(index:int,text:str,clear:Literal['True','False']='False',context:Context=None):
+async def type_tool(index:int,text:str,clear:Literal['True','False']='False',press_enter:Literal['True','False']='False',context:Context=None):
     '''Types text into input fields, text areas, search boxes, or any editable element. Can optionally clear existing content before typing. Includes natural typing delay for better compatibility.'''
     page=await context.get_current_page()
     element=await context.get_element_by_index(index=index)
@@ -42,6 +42,8 @@ async def type_tool(index:int,text:str,clear:Literal['True','False']='False',con
         await page.keyboard.press('Control+A')
         await page.keyboard.press('Backspace')
     await page.keyboard.type(text,delay=80)
+    if press_enter=='True':
+        await page.keyboard.press('Enter')
     return f'Typed {text} in element at label {index}'
 
 @Tool('Wait Tool',params=Wait)

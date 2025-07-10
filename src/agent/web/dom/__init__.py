@@ -65,6 +65,7 @@ class DOM:
                     frame_xpath=await self.context.execute_script(frame,'(frame_element)=>getXPath(frame_element)',frame_element)
                 else:
                     frame_xpath=''
+                viewport =await self.context.get_viewport()
                 for element in element_nodes:
                     element_xpath=element.get('xpath')
                     node=DOMElementNode(**{
@@ -74,7 +75,8 @@ class DOM:
                         'attributes':element.get('attributes'),
                         'center':CenterCord(**element.get('center')),
                         'bounding_box':BoundingBox(**element.get('box')),
-                        'xpath':{'frame':frame_xpath,'element':element_xpath}
+                        'xpath':{'frame':frame_xpath,'element':element_xpath},
+                        'viewport':viewport
                     })
                     interactive_elements.append(node)
 
@@ -85,7 +87,8 @@ class DOM:
                         'role':element.get('role'),
                         'name':element.get('name'),
                         'attributes':element.get('attributes'),
-                        'xpath':{'frame':frame_xpath,'element':element_xpath}
+                        'xpath':{'frame':frame_xpath,'element':element_xpath},
+                        'viewport':viewport
                     })
                     scrollable_elements.append(node)
                 
@@ -96,7 +99,8 @@ class DOM:
                         'role':element.get('role'),
                         'content':element.get('content'),
                         'center':CenterCord(**element.get('center')),
-                        'xpath':{'frame':frame_xpath,'element':element_xpath}
+                        'xpath':{'frame':frame_xpath,'element':element_xpath},
+                        'viewport':viewport
                     })
                     informative_elements.append(node)
 
