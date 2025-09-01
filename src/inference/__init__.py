@@ -1,12 +1,14 @@
 from src.message import AIMessage,SystemMessage
 from abc import ABC,abstractmethod
 from pydantic import BaseModel
+from typing import Optional
 from src.tool import Tool
 
 class Token(BaseModel):
-    input: int
-    output: int
-    total: int
+    input: Optional[int]=None
+    output: Optional[int]=None
+    cache: Optional[int]=None
+    total: Optional[int]=None
 
 structured_output_prompt='''
 Integrate the JSON output as part of the structured response, ensuring it strictly follows the provided schema.

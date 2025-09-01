@@ -5,7 +5,9 @@ from ratelimit import limits,sleep_and_retry
 from src.inference import BaseInference,Token
 from httpx import Client,AsyncClient
 from pydantic import BaseModel
+from typing import Optional
 from typing import Literal
+from src.tool import Tool
 from json import loads
 from uuid import uuid4
 
@@ -15,14 +17,62 @@ class ChatGemini(BaseInference):
         self.api_version=api_version
         self.modality=modality
 
+
+    def cache_content(self,system_message:Optional[SystemMessage]=None,tools:Optional[list[Tool]]=None,messages:Optional[list[BaseMessage]]=None,display_name:Optional[str]=None,ttl:int=60):
+        url = f"https://generativelanguage.googleapis.com/{self.api_version}/cachedContents?key={self.api_key}"
+        payload = {
+            "ttl": f"{ttl}s",
+            "model": f"models/{self.model}",
+        }
+        # Add display name if provided
+        if display_name:
+            payload["display_name"] = display_name
+        # Add system instruction if provided
+        if system_message:
+            payload["systemInstruction"] = {
+                "parts": [
+                    {
+                        "text": system_message.content
+                    }
+                ]
+            }
+        # Add tools if provided
+        if tools:
+            payload["tools"] = [
+                {
+                    "function_declarations": [
+                        {
+                            "name": tool.name,
+                            "description": tool.description,
+                            "parameters": tool.schema
+                        }
+                        for tool in tools
+                    ]
+                }
+            ]
+        try:
+            with Client() as client:
+                response = client.post(url, json=payload, headers=self.headers, timeout=None)
+            json_obj=response.json()
+            if json_obj.get('error'):
+                raise Exception(json_obj['error']['message'])
+            usage_metadata=json_obj['usageMetadata']
+            self.tokens=Token(cache=usage_metadata["totalTokenCount"])
+            return json_obj['name']
+        except HTTPError as err:
+            print(f'Error: {err.response.text}, Status Code: {err.response.status_code}')
+            return None
+        except ConnectionError as err:
+            print(f'Connection Error: {err}')
+            return None
+        
     @sleep_and_retry
     @limits(calls=15,period=60)
     @retry(stop=stop_after_attempt(3),retry=retry_if_exception_type(RequestException))
-    def invoke(self, messages: list[BaseMessage],json=False,model:BaseModel|None=None) -> AIMessage|ToolMessage|BaseModel:
-        headers=self.headers
+    def invoke(self, messages: list[BaseMessage],json=False,model:BaseModel|None=None,cache_name:Optional[str]=None) -> AIMessage|ToolMessage|BaseModel:
+        self.headers.update({'x-goog-api-key':self.api_key})
         temperature=self.temperature
         url=self.base_url or f"https://generativelanguage.googleapis.com/{self.api_version}/models/{self.model}:generateContent"
-        params={'key':self.api_key}
         contents=[]
         system_instruct=None
         for message in messages:
@@ -85,9 +135,13 @@ class ChatGemini(BaseInference):
             ]
         if system_instruct:
             payload['system_instruction']=system_instruct
+
+        if cache_name:
+            payload['cachedContent']=f"cachedContents/{cache_name}"
+            
         try:
             with Client() as client:
-                response=client.post(url=url,headers=headers,json=payload,params=params,timeout=None)
+                response=client.post(url=url,headers=self.headers,json=payload,timeout=None)
             json_obj=response.json()
             # print(json_obj)
             if json_obj.get('error'):
@@ -119,10 +173,9 @@ class ChatGemini(BaseInference):
     @limits(calls=15,period=60)
     @retry(stop=stop_after_attempt(3),retry=retry_if_exception_type(RequestException))
     async def async_invoke(self, messages: list[BaseMessage],json=False,model:BaseModel=None) -> AIMessage|ToolMessage|BaseModel:
-        headers=self.headers
         temperature=self.temperature
         url=self.base_url or f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
-        params={'key':self.api_key}
+        self.headers.update({'x-goog-api-key':self.api_key})
         contents=[]
         system_instruction=None
         for message in messages:
@@ -187,7 +240,7 @@ class ChatGemini(BaseInference):
             payload['system_instruction']=system_instruction
         try:
             async with AsyncClient() as client:
-                response=await client.post(url=url,headers=headers,json=payload,params=params,timeout=None)
+                response=await client.post(url=url,headers=self.headers,json=payload,timeout=None)
             json_obj=response.json()
             # print(json_obj)
             if json_obj.get('error'):
