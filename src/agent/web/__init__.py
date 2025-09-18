@@ -1,4 +1,4 @@
-from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,tab_tool,forward_tool,done_tool,download_tool,human_tool
+from src.agent.web.tools import click_tool,goto_tool,type_tool,scroll_tool,wait_tool,back_tool,key_tool,scrape_tool,tab_tool,forward_tool,done_tool,download_tool,human_tool,script_tool
 from src.message import SystemMessage,HumanMessage,ImageMessage,AIMessage
 from src.agent.web.utils import read_markdown_file,extract_agent_data
 from src.agent.web.browser import Browser,BrowserConfig
@@ -25,10 +25,11 @@ import json
 main_tools=[
     click_tool,goto_tool,key_tool,scrape_tool,
     type_tool,scroll_tool,wait_tool,back_tool,
-    tab_tool,done_tool,forward_tool,download_tool
+    tab_tool,done_tool,forward_tool,download_tool,
+    script_tool
 ]
 
-class WebAgent(BaseAgent):
+class Agent(BaseAgent):
     def __init__(self,config:BrowserConfig=None,additional_tools:list[Tool]=[],
     instructions:list=[],memory:BaseMemory=None,llm:BaseInference=None,max_iteration:int=10,
     use_vision:bool=False,include_human_in_loop:bool=False,verbose:bool=False,token_usage:bool=False) -> None:

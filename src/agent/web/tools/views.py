@@ -57,5 +57,8 @@ class Menu(SharedBaseModel):
     index:int = Field(...,description="Index of the dropdown/select element to interact with",examples=[0])
     labels:list[str] = Field(...,description="List of visible option labels to select from the dropdown menu (supports single or multiple selection)",examples=[["BMW"],["Option 1","Option 2"]])
 
+class Script(SharedBaseModel):
+    script:str = Field(...,description="The JavaScript code to execute in the current webpage to scrape data. Make sure the script is well-formatted",examples=["console.log('Hello, world!')"])
+
 class HumanInput(SharedBaseModel):
     prompt: str = Field(..., description="Clear question or instruction to ask the human user when assistance is needed", examples=["Please enter the OTP code sent to your phone", "What is your preferred payment method?", "Please solve this CAPTCHA"])

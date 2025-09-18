@@ -1,0 +1,24 @@
+[project]
+name = "Web-Navigator"
+version = "0.1.0"
+description = "Web-Navigator is an ai agent for web browsing and scraping websites."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28.1",
+    "keyboard>=0.13.5",
+    "langgraph>=0.6.7",
+    "markdownify>=1.2.0",
+    "nest-asyncio>=1.6.0",
+    "playwright>=1.55.0",
+    "pyaudio>=0.2.14",
+    "pydantic>=2.11.9",
+    "pyperclip>=1.10.0",
+    "python-dotenv>=1.1.1",
+    "ratelimit>=2.2.1",
+    "requests>=2.32.5",
+    "rich>=14.1.0",
+    "tenacity>=9.1.2",
+    "termcolor>=3.1.0",
+]

@@ -47,7 +47,7 @@ class Tool:
         
     def __repr__(self):
         if self.params is not None:
-            params=list(self.params.model_fields.keys())
+            params=list(self.params.model_json_schema().get('properties').keys())
         elif self.schema is not None:
             params=list(self.schema.get('properties').keys())
         return f"Tool(name={self.name}, description={self.description}, params={params})"

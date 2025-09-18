@@ -1,6 +1,6 @@
 <div align="center">
 
-  <h1>🌐 Web-Agent</h1>
+  <h1>🌐 Web-Navigator</h1>
 
   <a href="https://github.com/Jeomon/Web-Agent/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
@@ -20,29 +20,28 @@
 
 <br>
 
-**Web Agent** is your intelligent browsing companion, built to seamlessly navigate websites, interact with dynamic content, perform smart searches, download files, and adapt to ever-changing pages — all with minimal effort from you. Powered by advanced LLMs and the robust Playwright framework, it transforms complex web tasks into streamlined, automated workflows that boost productivity and save time.
+**Web Navigator** is your intelligent browsing companion, built to seamlessly navigate websites, interact with dynamic content, perform smart searches, download files, and adapt to ever-changing pages — all with minimal effort from you. Powered by advanced LLMs and the robust Playwright framework, it transforms complex web tasks into streamlined, automated workflows that boost productivity and save time.
 
 ## 🛠️Installation Guide
 
 ### **Prerequisites**
 
 - Python 3.11 or higher
-- Langgraph
-- Playwright
+- UV
 
 ### **Installation Steps**
 
 **Clone the repository:**
 
 ```bash
-git clone https://github.com/Jeomon/Web-Agent.git
-cd Web-Agent
+git clone https://github.com/CursorTouch/Web-Navigator.git
+cd Web-Navigator
 ```
 
 **Install dependencies:**
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 **Setup Playwright:**
@@ -71,7 +70,7 @@ load_dotenv()
 google_api_key=os.getenv('GOOGLE_API_KEY')
 
 llm=ChatGemini(model='gemini-2.0-flash',api_key=google_api_key,temperature=0)
-agent=WebAgent(llm=llm,verbose=True,use_vision=False)
+agent=Agent(llm=llm,verbose=True,use_vision=False)
 
 user_query=input('Enter your query: ')
 agent_response=agent.invoke(user_query)

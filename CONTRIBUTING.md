@@ -1,4 +1,4 @@
-# Contributing to Web-Agent
+# Contributing to Web-Navigator
 
 Thank you for your interest in contributing to Web Agent! This document provides guidelines and instructions for contributing to this project.
 

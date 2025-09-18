@@ -1,4 +1,4 @@
-from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward,HumanInput
+from src.agent.web.tools.views import Click,Type,Wait,Scroll,GoTo,Back,Key,Download,Scrape,Tab,Upload,Menu,Done,Forward,HumanInput,Script
 from src.agent.web.context import Context
 from markdownify import markdownify
 from typing import Literal,Optional
@@ -206,6 +206,13 @@ async def menu_tool(index:int,labels:list[str],context:Context=None):
     labels=labels if len(labels)>1 else labels[0]
     await handle.select_option(label=labels)
     return f'Opened context menu of element at label {index} and selected {", ".join(labels)}'
+
+@Tool("Script Tool",params=Script)
+async def script_tool(script:str,context:Context=None):
+    '''Executes arbitrary JavaScript code on the page. Can be used to manipulate the DOM or trigger events or scrape data. Returns the result of the executed script.'''
+    page=await context.get_current_page()
+    result=await context.execute_script(page,script)
+    return f"Result of the executed script: {result}"
 
 @Tool('Human Tool',params=HumanInput)
 async def human_tool(prompt:str,context:Context=None):
